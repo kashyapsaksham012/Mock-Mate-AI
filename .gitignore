@@ -41,3 +41,10 @@ build/
 # Logs and temporary files
 health_output.txt
 *.log
+
+# Personal and Testing Files
+Saksham__Resume-_.pdf
+IMPLEMENTATION_REPORT.md
+backend/result.json
+backend/test.pdf
+backend/test-resume.txt

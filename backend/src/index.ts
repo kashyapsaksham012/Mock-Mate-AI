@@ -1,11 +1,13 @@
 import express, { ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import { env } from './config/env';
-import { db } from './config/db'; // Ensure top-level initialization
+import { db } from './config/db';
 
 import { billingRoutes } from './modules/billing/billing.routes';
 import { webhookRoutes } from './modules/webhook/webhook.routes';
 import { clerkWebhookRoutes } from './modules/webhook/clerk-webhook.routes';
+import { resumeRoutes } from './modules/resume/resume.routes';
+import { interviewRoutes } from './modules/interview/interview.routes';
 import { subscriptionGuard } from './middleware/subscriptionGuard';
 import { requireAuth } from './middleware/auth';
 import { AppError } from './utils/errors';
@@ -15,33 +17,28 @@ const app = express();
 // Global Middlewares
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 
-// Ensure raw bodies are passed to Webhooks BEFORE express.json()
+// API Routes
+// Note: Resume upload is registered before express.json to prevent stream interference
+app.use('/api/resume', resumeRoutes);
+
+// Webhooks
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/webhooks', clerkWebhookRoutes);
 
-// Apply standard JSON parser for all other routes
+// JSON Parser for all other routes
 app.use(express.json());
 
-// API Routes
+// Main App Routes
 app.use('/api/billing', billingRoutes);
+app.use('/api/interview', interviewRoutes);
 
-// Example protected feature route using the fast-path subscription guard
-app.get('/api/features/premium-content', requireAuth, subscriptionGuard, (req, res) => {
-  res.json({
-    data: "This is premium content only visible to active subscribers.",
-    subscriptionDetails: (req as any).subscription,
-  });
-});
-// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-
-// Error Handling Middleware
+// Error Handling
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   console.error('[Error]:', err);
-
   if (err instanceof AppError) {
     res.status(err.statusCode).json({ error: err.message });
   } else {

@@ -74,11 +74,32 @@ export const auditLogs = pgTable('audit_logs', {
   };
 });
 
+// Resume Profiles table (one profile per user)
+export const resumeProfiles = pgTable('resume_profiles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+  fullName: text('full_name'),
+  email: text('email'),
+  currentRole: text('current_role'),
+  experience: text('experience'),
+  skills: text('skills').array(),
+  primaryDomain: text('primary_domain'),
+  targetRole: text('target_role'),
+  fileUrl: text('file_url'),
+  parserSource: text('parser_source'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => {
+  return {
+    userIdx: index('idx_resume_profiles_user_id').on(table.userId),
+  };
+});
+
 // Relations definitions (optional, useful for Drizzle relational queries)
 export const usersRelations = relations(users, ({ many }) => ({
   subscriptions: many(subscriptions),
   payments: many(payments),
   auditLogs: many(auditLogs),
+  resumeProfiles: many(resumeProfiles),
 }));
 
 export const subscriptionsRelations = relations(subscriptions, ({ one, many }) => ({
@@ -91,4 +112,11 @@ export const subscriptionsRelations = relations(subscriptions, ({ one, many }) =
     references: [plans.id],
   }),
   payments: many(payments),
+}));
+
+export const resumeProfilesRelations = relations(resumeProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [resumeProfiles.userId],
+    references: [users.id],
+  }),
 }));

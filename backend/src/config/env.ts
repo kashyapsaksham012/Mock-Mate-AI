@@ -4,6 +4,8 @@ import path from 'path';
 
 // Load variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Allow local overrides for secrets and machine-specific config
+dotenv.config({ path: path.resolve(__dirname, '../../.env.local'), override: true });
 
 const envSchema = z.object({
   PORT: z.string().default('3001'),
@@ -19,6 +21,13 @@ const envSchema = z.object({
   CLERK_WEBHOOK_SECRET: z.string({ message: 'CLERK_WEBHOOK_SECRET is required' }),
   
   FRONTEND_URL: z.string().default('http://localhost:3000'),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
+  RESUME_UPLOAD_DIR: z.string().default('uploads/resumes'),
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
+  CLOUDINARY_UPLOAD_FOLDER: z.string().default('mockmate/resumes'),
 });
 
 const parseEnv = () => {
