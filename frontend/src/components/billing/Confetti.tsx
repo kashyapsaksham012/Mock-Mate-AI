@@ -5,18 +5,31 @@ import { motion } from "framer-motion";
 
 const COLORS = ["#10b981", "#34d399", "#6ee7b7", "#fbbf24", "#60a5fa", "#f472b6", "#a78bfa"];
 
+function createSeededRandom(seed: number) {
+  let state = seed;
+
+  return () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
+}
+
 export function Confetti() {
   const dots = useMemo(
     () =>
-      Array.from({ length: 38 }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        size: Math.random() * 8 + 5,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        delay: Math.random() * 0.8 + 1.0,
-        duration: Math.random() * 1.5 + 1.2,
-        isSquare: Math.random() > 0.5,
-      })),
+      Array.from({ length: 38 }, (_, i) => {
+        const random = createSeededRandom(i + 1);
+
+        return {
+          id: i,
+          x: random() * 100,
+          size: random() * 8 + 5,
+          color: COLORS[Math.floor(random() * COLORS.length)],
+          delay: random() * 0.8 + 1.0,
+          duration: random() * 1.5 + 1.2,
+          isSquare: random() > 0.5,
+        };
+      }),
     []
   );
 

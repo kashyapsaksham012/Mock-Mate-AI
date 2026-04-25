@@ -3,6 +3,11 @@ import { PricingNavbar } from "@/components/pricing-navbar";
 import { PricingCard } from "@/components/pricing-card";
 import { subscriptionPageCopy, subscriptionPlans } from "@/lib/subscription-plans";
 
+type BackendPlan = {
+  name: string;
+  priceCents: number;
+};
+
 async function getBackendPlans() {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/billing/plans`, { cache: 'no-store' });
@@ -23,7 +28,7 @@ export default async function PricingPage() {
 
   // Merge backend data with frontend static metadata
   const dynamicPlans = subscriptionPlans.map(plan => {
-    const backendPlan = backendPlans.find((p: any) => p.name === (plan.backendPlanType === "pro_annual" ? "yearly" : "monthly"));
+    const backendPlan = backendPlans.find((planRecord: BackendPlan) => planRecord.name === (plan.backendPlanType === "pro_annual" ? "yearly" : "monthly"));
     if (backendPlan) {
       return {
         ...plan,

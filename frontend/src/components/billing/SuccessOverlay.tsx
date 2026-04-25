@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@clerk/nextjs";
 import { CheckIcon } from "./CheckIcon";
@@ -19,7 +19,6 @@ interface SessionData {
 }
 
 export function SuccessOverlay() {
-  const router = useRouter();
   const { getToken } = useAuth();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");

@@ -6,6 +6,17 @@ import { users, plans, subscriptions } from '../../models/schema';
 import { eq } from 'drizzle-orm';
 import { NotFoundError } from '../../utils/errors';
 
+interface ClerkUserRecord {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  primary_email_address_id?: string | null;
+  email_addresses?: Array<{
+    id: string;
+    email_address: string;
+  }>;
+}
+
 export class BillingService {
   /**
    * Retrieves all available seeded plans.
@@ -23,18 +34,10 @@ export class BillingService {
       where: eq(users.id, userId),
     });
 
-    // JIT Sync: If user not in DB, create them now
+    // JIT Sync: If user not in DB, hydrate from Clerk instead of inventing placeholder data.
     if (!user) {
       console.log(`[BillingService] User ${userId} not found in DB. Performing JIT sync...`);
-      // We assume the user is authenticated via Clerk (checked in middleware)
-      // For now, we'll create a skeletal user - real data comes from Clerk webhooks
-      // But we need the record to exist for foreign key constraints
-      await db.insert(users).values({
-        id: userId,
-        email: 'sync-pending@example.com', // Placeholder until webhook hits or we fetch from Clerk
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      await this.syncUserFromClerk(userId);
       
       user = await db.query.users.findFirst({
         where: eq(users.id, userId),
@@ -84,6 +87,41 @@ export class BillingService {
     });
 
     return { sessionId: session.id, url: session.url };
+  }
+
+  private static async syncUserFromClerk(userId: string) {
+    const response = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${env.CLERK_SECRET_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`CLERK_USER_LOOKUP_FAILED:${response.status}`);
+    }
+
+    const clerkUser = (await response.json()) as ClerkUserRecord;
+    const primaryEmail = clerkUser.email_addresses?.find(
+      (email: { id: string; email_address: string }) => email.id === clerkUser.primary_email_address_id
+    )?.email_address;
+    const fullName = [clerkUser.first_name, clerkUser.last_name].filter(Boolean).join(' ') || null;
+
+    if (!primaryEmail) {
+      throw new Error('CLERK_USER_EMAIL_NOT_FOUND');
+    }
+
+    await db.insert(users).values({
+      id: clerkUser.id,
+      email: primaryEmail,
+      fullName,
+    }).onConflictDoUpdate({
+      target: users.id,
+      set: {
+        email: primaryEmail,
+        fullName,
+        updatedAt: new Date(),
+      },
+    });
   }
 
   /**
