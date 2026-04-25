@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { UserButton, useAuth } from "@clerk/nextjs";
-import { clerkRoutes } from "@/lib/clerk-routes";
+import { clerkRoutes, postAuthRedirectUrl } from "@/lib/clerk-routes";
 
 export function LandingNavbarActions() {
   const isHydrated = useSyncExternalStore(
@@ -14,7 +14,6 @@ export function LandingNavbarActions() {
   const { isSignedIn } = useAuth();
   const signInUrl = clerkRoutes.signIn;
   const signUpUrl = clerkRoutes.signUp;
-  const pricingUrl = clerkRoutes.afterSignIn ?? clerkRoutes.afterSignUp;
 
   if (!isHydrated) {
     return <div className="nav-actions" aria-hidden="true" />;
@@ -37,11 +36,9 @@ export function LandingNavbarActions() {
         </>
       ) : (
         <>
-          {pricingUrl ? (
-            <Link href={pricingUrl} className="btn btn-ghost">
-              Dashboard
-            </Link>
-          ) : null}
+          <Link href={postAuthRedirectUrl} className="btn btn-ghost">
+            Dashboard
+          </Link>
           <UserButton
             appearance={{
               elements: {

@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { clerkRoutes } from "@/lib/clerk-routes";
+import { clerkRoutes, postAuthRedirectUrl } from "@/lib/clerk-routes";
 
 type HeroCTAProps = {
   className?: string;
@@ -18,16 +18,13 @@ export function HeroCTA({ className = "" }: HeroCTAProps) {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const signUpUrl = clerkRoutes.signUp;
-  const pricingUrl = clerkRoutes.afterSignIn ?? clerkRoutes.afterSignUp;
 
   const handleClick = () => {
     if (!isHydrated) {
       return;
     }
     if (isSignedIn) {
-      if (pricingUrl) {
-        router.push(pricingUrl);
-      }
+      router.push(postAuthRedirectUrl);
       return;
     }
     if (signUpUrl) {

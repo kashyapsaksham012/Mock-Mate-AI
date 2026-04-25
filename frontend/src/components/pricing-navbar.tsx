@@ -3,26 +3,29 @@
 import Link from "next/link";
 import { Sparkles, ArrowLeft } from "lucide-react";
 import { SignOutButton, UserButton } from "@clerk/nextjs";
+import { appRoutes } from "@/lib/app-routes";
 
 export function PricingNavbar() {
   return (
-    <nav className="fixed top-0 left-0 z-50 w-full border-b border-white/10 bg-[#080C14]/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-white">
+    <nav className="navbar scrolled">
+      <div className="container nav-container">
+        <Link href={appRoutes.home} className="logo font-heading">
           <Sparkles size={20} className="text-cyan-400" />
           MockMate
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="nav-actions">
           <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 transition-colors hover:text-white"
+            href={appRoutes.home}
+            className="btn btn-ghost"
+            style={{ padding: "0.5rem 1rem" }}
           >
             <ArrowLeft size={16} />
-            Back to home
+            <span className="hidden sm:inline">Back to home</span>
           </Link>
-          <SignOutButton redirectUrl="/">
-            <button className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-slate-200 transition-colors hover:bg-white/10">
-              Sign out
+          <SignOutButton redirectUrl={appRoutes.home}>
+            <button className="btn btn-secondary" type="button" style={{ padding: "0.5rem 1rem" }}>
+              <span className="hidden sm:inline">Sign out</span>
+              <span className="sm:hidden">Exit</span>
             </button>
           </SignOutButton>
           <UserButton />
