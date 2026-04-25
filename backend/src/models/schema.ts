@@ -27,6 +27,8 @@ export const subscriptions = pgTable('subscriptions', {
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   planId: uuid('plan_id').notNull().references(() => plans.id),
   stripeSubscriptionId: text('stripe_subscription_id').unique().notNull(),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripePriceId: text('stripe_price_id'),
   status: text('status').notNull(), // active, past_due, canceled, etc.
   currentPeriodStart: timestamp('current_period_start', { withTimezone: true }).notNull(),
   currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }).notNull(),

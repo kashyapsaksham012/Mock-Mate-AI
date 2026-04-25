@@ -2,8 +2,6 @@ import express, { ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import { env } from './config/env';
 import { db } from './config/db'; // Ensure top-level initialization
-import { redis } from './config/redis'; // Ensure top-level initialization
-import { users } from './models/schema';
 
 import { billingRoutes } from './modules/billing/billing.routes';
 import { webhookRoutes } from './modules/webhook/webhook.routes';
@@ -54,5 +52,5 @@ app.use(errorHandler);
 
 app.listen(env.PORT, () => {
   console.log(`🚀 Server started on port ${env.PORT}`);
-  console.log(`🔌 Database and Redis config initialized.`);
+  console.log(`🔌 Database config initialized.`);
 });

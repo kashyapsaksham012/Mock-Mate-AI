@@ -1,6 +1,9 @@
 import { Request, Router, Response, NextFunction } from 'express';
 import { BillingService } from './billing.service';
 import { requireAuth, ClerkAuthRequest } from '../../middleware/auth';
+import { db } from '../../config/db';
+import { subscriptions } from '../../models/schema';
+import { and, eq, gt, desc } from 'drizzle-orm';
 
 const router = Router();
 
@@ -34,6 +37,48 @@ router.get('/verify-session', requireAuth, async (req: Request, res: Response, n
 
 // All below are protected
 router.use(requireAuth);
+
+// GET /api/billing/subscription-status
+router.get('/subscription-status', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as unknown as ClerkAuthRequest;
+    const userId = authReq.auth.userId;
+    const now = new Date();
+
+    let sub = await db.query.subscriptions.findFirst({
+      where: and(
+        eq(subscriptions.userId, userId),
+        gt(subscriptions.currentPeriodEnd, now),
+      ),
+      with: { plan: true },
+      orderBy: [desc(subscriptions.createdAt)],
+    });
+
+    // Fallback: Proactively sync if no valid sub found in DB but user might have one in Stripe
+    if (!sub || sub.status !== 'active') {
+      console.log(`[BillingRoutes] No active sub for ${userId} in DB. Syncing with Stripe...`);
+      const syncedSub = await BillingService.syncSubscriptionStatus(userId);
+      if (syncedSub && syncedSub.status === 'active' && syncedSub.currentPeriodEnd > now) {
+        sub = syncedSub;
+      }
+    }
+
+    if (!sub || sub.status === 'expired') {
+      return res.json({ status: 'inactive' });
+    }
+
+    return res.json({
+      status: sub.status,
+      subscription: {
+        planName: sub.plan?.name ?? null,
+        periodEnd: sub.currentPeriodEnd,
+        cancelAtPeriodEnd: sub.cancelAtPeriodEnd ?? false,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // POST /api/billing/subscribe
 router.post('/subscribe', async (req: Request, res: Response, next: NextFunction) => {

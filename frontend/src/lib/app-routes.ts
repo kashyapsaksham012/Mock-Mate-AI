@@ -3,5 +3,5 @@ export const appRoutes = {
   signIn: "/sign-in",
   signUp: "/sign-up",
   pricing: "/pricing",
-  dashboardNew: "/dashboard/new",
+  dashboard: "/dashboard",
 } as const;

@@ -8,7 +8,6 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const envSchema = z.object({
   PORT: z.string().default('3001'),
   DATABASE_URL: z.string({ message: 'DATABASE_URL is required' }),
-  REDIS_URL: z.string({ message: 'REDIS_URL is required' }),
   
   STRIPE_SECRET_KEY: z.string({ message: 'STRIPE_SECRET_KEY is required' }),
   STRIPE_WEBHOOK_SECRET: z.string({ message: 'STRIPE_WEBHOOK_SECRET is required' }),

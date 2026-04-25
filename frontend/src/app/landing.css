@@ -206,20 +206,25 @@ button {
 /* Navbar */
 .navbar {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: var(--navbar-height);
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    max-width: var(--container-max);
+    height: var(--navbar-height-scrolled);
     z-index: 1000;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border-bottom: 1px solid transparent;
+    background: rgba(8, 12, 20, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 24px;
 }
 
 .navbar.scrolled {
-    height: var(--navbar-height-scrolled);
+    top: 1rem;
     background: rgba(8, 12, 20, 0.8);
-    backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border-glass);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .nav-container {
@@ -227,6 +232,7 @@ button {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    position: relative;
 }
 
 .logo {
@@ -245,13 +251,15 @@ button {
 
 .nav-links {
     display: flex;
-    gap: 2.5rem;
+    align-items: center;
+    gap: 1.5rem;
 }
 
 .nav-link {
     font-size: 0.9375rem;
     font-weight: 500;
     color: var(--text-muted);
+    transition: color 0.3s ease;
 }
 
 .nav-link:hover {
@@ -262,6 +270,23 @@ button {
     display: flex;
     align-items: center;
     gap: 1.5rem;
+}
+
+.plan-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 99px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    line-height: 1;
 }
 
 .btn {
@@ -1332,19 +1357,7 @@ footer {
   line-height: 1.6;
 }
 
-.plan-badge {
-  display: inline-flex; 
-  align-items: center; 
-  gap: 8px;
-  background: rgba(16, 185, 129, 0.1); 
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  border-radius: 100px; 
-  padding: 8px 20px;
-  font-size: 0.875rem; 
-  font-weight: 600;
-  margin-bottom: 2rem;
-}
+
 
 .pulse-dot {
   width: 8px; 

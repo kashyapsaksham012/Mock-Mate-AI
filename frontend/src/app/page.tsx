@@ -24,6 +24,10 @@ import {
 } from "lucide-react";
 import { HeroCTA } from "@/components/hero-cta";
 import { LandingNavbarActions } from "@/components/landing-navbar-actions";
+import { PlanBadge } from "@/components/plan-badge";
+import { appRoutes } from "@/lib/app-routes";
+import { useRouter } from "next/navigation";
+import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -353,6 +357,7 @@ export default function LandingPage() {
             {landingData.navigation.links.map((link, idx) => (
               <a key={idx} href={link.href} className="nav-link">{link.label}</a>
             ))}
+            <PlanBadge />
           </nav>
 
           <LandingNavbarActions />
@@ -553,7 +558,7 @@ export default function LandingPage() {
                     <li key={fIdx}><Check size={18} /> {feature}</li>
                   ))}
                 </ul>
-                <a href="/dashboard/new" className={`btn ${plan.popular ? 'btn-primary' : 'btn-secondary'}`} style={{ width: "100%", justifyContent: "center" }}>
+                <a href={appRoutes.dashboard} className={`btn ${plan.popular ? 'btn-primary' : 'btn-secondary'}`} style={{ width: "100%", justifyContent: "center" }}>
                   {plan.cta}
                 </a>
               </div>

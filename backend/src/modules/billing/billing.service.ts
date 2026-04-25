@@ -1,10 +1,9 @@
 import { stripe } from '../../config/stripe';
 import { db } from '../../config/db';
-import { redis } from '../../config/redis';
 import { env } from '../../config/env';
 import { users, plans, subscriptions } from '../../models/schema';
 import { eq } from 'drizzle-orm';
-import { NotFoundError } from '../../utils/errors';
+import { AppError, NotFoundError } from '../../utils/errors';
 
 interface ClerkUserRecord {
   id: string;
@@ -18,49 +17,35 @@ interface ClerkUserRecord {
 }
 
 export class BillingService {
-  /**
-   * Retrieves all available seeded plans.
-   */
   static async getPlans() {
     return db.select().from(plans);
   }
 
-  /**
-   * Creates or retrieves a Stripe customer and generates a checkout session for a subscription.
-   */
   static async createSubscriptionSession(userId: string, planName: string, successUrl: string, cancelUrl: string) {
-    // 1. Get/Sync User
     let user = await db.query.users.findFirst({
       where: eq(users.id, userId),
     });
 
-    // JIT Sync: If user not in DB, hydrate from Clerk instead of inventing placeholder data.
     if (!user) {
       console.log(`[BillingService] User ${userId} not found in DB. Performing JIT sync...`);
       await this.syncUserFromClerk(userId);
-      
-      user = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-      });
+      user = await db.query.users.findFirst({ where: eq(users.id, userId) });
     }
 
-    if (!user) throw new Error('USER_NOT_FOUND');
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
 
     const productId = planName === 'yearly' ? env.STRIPE_YEARLY_PRODUCT_ID : env.STRIPE_MONTHLY_PRODUCT_ID;
-
-    // Fetch the product from Stripe to get the default_price
     const product = await stripe.products.retrieve(productId);
-    if (!product || !product.default_price) {
-       throw new Error(`Product ${planName} missing default_price in Stripe`);
+
+    if (!product.default_price) {
+      throw new AppError(`Product ${planName} is missing default price`, 400);
     }
 
     const stripePriceId = product.default_price as string;
-
-    // Sync the Stripe Price ID to our DB if it's currently using a mock ID 
-    // This is critical for the webhook handler to find the plan later.
     await db.update(plans).set({ stripePriceId }).where(eq(plans.name, planName));
 
-    // 2. Ensure user has a Stripe Customer ID
     let stripeCustomerId = user.stripeCustomerId;
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
@@ -68,15 +53,15 @@ export class BillingService {
         name: user.fullName || undefined,
         metadata: { userId: user.id },
       });
+
       stripeCustomerId = customer.id;
       await db.update(users).set({ stripeCustomerId }).where(eq(users.id, userId));
     }
 
-    // 3. Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       payment_method_types: ['card'],
-      line_items: [{ price: product.default_price as string, quantity: 1 }],
+      line_items: [{ price: stripePriceId, quantity: 1 }],
       mode: 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -97,136 +82,180 @@ export class BillingService {
     });
 
     if (!response.ok) {
-      throw new Error(`CLERK_USER_LOOKUP_FAILED:${response.status}`);
+      throw new AppError(`Clerk user lookup failed (${response.status})`, 502);
     }
 
     const clerkUser = (await response.json()) as ClerkUserRecord;
     const primaryEmail = clerkUser.email_addresses?.find(
-      (email: { id: string; email_address: string }) => email.id === clerkUser.primary_email_address_id
+      (email: { id: string; email_address: string }) => email.id === clerkUser.primary_email_address_id,
     )?.email_address;
     const fullName = [clerkUser.first_name, clerkUser.last_name].filter(Boolean).join(' ') || null;
 
     if (!primaryEmail) {
-      throw new Error('CLERK_USER_EMAIL_NOT_FOUND');
+      throw new AppError('Clerk user email not found', 400);
     }
 
-    await db.insert(users).values({
-      id: clerkUser.id,
-      email: primaryEmail,
-      fullName,
-    }).onConflictDoUpdate({
-      target: users.id,
-      set: {
+    await db
+      .insert(users)
+      .values({
+        id: clerkUser.id,
         email: primaryEmail,
         fullName,
-        updatedAt: new Date(),
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          email: primaryEmail,
+          fullName,
+          updatedAt: new Date(),
+        },
+      });
   }
 
-  /**
-   * Cancels a subscription at period end.
-   */
   static async cancelSubscription(userId: string) {
     const activeSub = await db.query.subscriptions.findFirst({
       where: (subs, { eq, and }) => and(eq(subs.userId, userId), eq(subs.status, 'active')),
     });
 
-    if (!activeSub) throw new NotFoundError('No active subscription found');
+    if (!activeSub) {
+      throw new NotFoundError('No active subscription found');
+    }
 
-    // Tell Stripe to cancel at period end
     const updatedStripeSub = await stripe.subscriptions.update(activeSub.stripeSubscriptionId, {
       cancel_at_period_end: true,
     });
 
-    // Update DB
-    await db.update(subscriptions)
-      .set({ 
+    await db
+      .update(subscriptions)
+      .set({
         cancelAtPeriodEnd: true,
         updatedAt: new Date(),
       })
       .where(eq(subscriptions.id, activeSub.id));
 
-    // Update Redis cache to reflect changes if necessary
-    // E.g., user is still active but will cancel. Status doesn't change yet.
     return updatedStripeSub;
   }
 
-  /**
-   * Undoes the cancel_at_period_end flag to reactivate subscription.
-   */
   static async reactivateSubscription(userId: string) {
     const activeSub = await db.query.subscriptions.findFirst({
-       where: (subs, { eq, and }) => and(eq(subs.userId, userId), eq(subs.status, 'active')),
+      where: (subs, { eq, and }) => and(eq(subs.userId, userId), eq(subs.status, 'active')),
     });
 
-    if (!activeSub) throw new NotFoundError('No active subscription found');
-    if (!activeSub.cancelAtPeriodEnd) return; // already renewing
+    if (!activeSub) {
+      throw new NotFoundError('No active subscription found');
+    }
+
+    if (!activeSub.cancelAtPeriodEnd) {
+      return;
+    }
 
     const updatedStripeSub = await stripe.subscriptions.update(activeSub.stripeSubscriptionId, {
       cancel_at_period_end: false,
     });
 
-    await db.update(subscriptions)
-      .set({ 
+    await db
+      .update(subscriptions)
+      .set({
         cancelAtPeriodEnd: false,
         updatedAt: new Date(),
       })
       .where(eq(subscriptions.id, activeSub.id));
-      
+
     return updatedStripeSub;
   }
 
-  /**
-   * Verified a Stripe checkout session and returns details for the success UI.
-   */
   static async verifyCheckoutSession(sessionId: string, userId: string) {
-    // 1. Idempotency — already verified? return from cache
-    const cached = await redis.get(`session:verified:${sessionId}`);
-    if (cached) return JSON.parse(cached);
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    // 2. Fetch from Stripe — source of truth
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['subscription', 'subscription.plan.product'],
-    });
-
-    // 3. Security — Check if the session belongs to the user
-    // We can verify this via client_reference_id which we set during session creation
     if (session.client_reference_id !== userId) {
-      throw new Error('SESSION_MISMATCH');
+      throw new AppError('Session does not belong to this user', 403);
     }
 
-    // 4. Payment must be paid
     if (session.payment_status !== 'paid') {
-      throw new Error('PAYMENT_NOT_COMPLETE');
+      throw new AppError('Payment not completed', 402);
     }
 
-    const sub = session.subscription as any;
-    const plan = sub.items.data[0].plan;
-    const isYearly = plan.interval === 'year';
+    const stripeSubscriptionId = typeof session.subscription === 'string'
+      ? session.subscription
+      : session.subscription?.id;
 
-    // 5. Calculate renewal date
-    const renewalDate = new Date(sub.current_period_end * 1000);
-    const formatted = renewalDate.toLocaleDateString('en-US', {
-      month: 'long', day: 'numeric', year: 'numeric'
+    const dbSubscription = stripeSubscriptionId
+      ? await db.query.subscriptions.findFirst({
+          where: eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId),
+          with: { plan: true },
+        })
+      : null;
+
+    return {
+      verified: true,
+      planName: dbSubscription?.plan?.name ?? null,
+      currentPeriodEnd: dbSubscription?.currentPeriodEnd ?? null,
+      cancelAtPeriodEnd: dbSubscription?.cancelAtPeriodEnd ?? false,
+      amount: session.amount_total,
+      currency: session.currency,
+      sessionId: session.id,
+      status: dbSubscription?.status ?? 'active',
+    };
+  }
+
+  static async syncSubscriptionStatus(userId: string) {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
     });
 
-    const payload = {
-      verified: true,
-      planName:     isYearly ? 'Pro Yearly'  : 'Pro Monthly',
-      interval:     isYearly ? 'yearly'      : 'monthly',
-      badgeLabel:   isYearly ? 'Pro Yearly — $49/yr' : 'Pro Monthly — $19/mo',
-      amountFormatted: `$${(session.amount_total! / 100).toFixed(2)}`,
-      renewalDate:  formatted,
-      sessionIdShort: `${sessionId.slice(0, 14)}...${sessionId.slice(-4)}`,
-      subtitle: isYearly
-        ? "You're saving $179 vs monthly. Smart choice!"
-        : "Your subscription is now active. Welcome aboard!",
-    };
+    if (!user || !user.stripeCustomerId) {
+      return null;
+    }
 
-    // 6. Cache result for 24hrs (idempotent)
-    await redis.set(`session:verified:${sessionId}`, JSON.stringify(payload), 'EX', 86400);
+    const stripeSubs = await stripe.subscriptions.list({
+      customer: user.stripeCustomerId,
+      status: 'all',
+      limit: 1,
+    });
 
-    return payload;
+    if (stripeSubs.data.length === 0) {
+      return null;
+    }
+
+    const stripeSub = stripeSubs.data[0];
+    const stripePriceId = stripeSub.items.data[0]?.price?.id;
+    
+    const plan = await db.query.plans.findFirst({
+      where: eq(plans.stripePriceId, stripePriceId),
+    });
+
+    if (!plan) return null;
+
+    const [dbSub] = await db
+      .insert(subscriptions)
+      .values({
+        userId,
+        planId: plan.id,
+        stripeSubscriptionId: stripeSub.id,
+        stripeCustomerId: user.stripeCustomerId,
+        stripePriceId,
+        status: stripeSub.status,
+        currentPeriodStart: new Date(stripeSub.current_period_start * 1000),
+        currentPeriodEnd: new Date(stripeSub.current_period_end * 1000),
+        cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
+      })
+      .onConflictDoUpdate({
+        target: subscriptions.stripeSubscriptionId,
+        set: {
+          status: stripeSub.status,
+          currentPeriodStart: new Date(stripeSub.current_period_start * 1000),
+          currentPeriodEnd: new Date(stripeSub.current_period_end * 1000),
+          cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+
+    // Re-fetch with plan relation
+    return await db.query.subscriptions.findFirst({
+      where: eq(subscriptions.id, dbSub.id),
+      with: { plan: true },
+    });
   }
 }
+

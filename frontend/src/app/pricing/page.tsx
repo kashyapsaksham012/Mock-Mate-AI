@@ -1,7 +1,9 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { PricingNavbar } from "@/components/pricing-navbar";
 import { PricingCard } from "@/components/pricing-card";
 import { subscriptionPageCopy, subscriptionPlans } from "@/lib/subscription-plans";
+import { redirect } from "next/navigation";
+import { appRoutes } from "@/lib/app-routes";
 
 type BackendPlan = {
   name: string;
@@ -21,6 +23,33 @@ async function getBackendPlans() {
 }
 
 export default async function PricingPage() {
+  const { userId, getToken } = await auth();
+  
+  let shouldRedirect = false;
+
+  // If logged in, check if already subscribed to redirect to dashboard
+  if (userId) {
+    try {
+      const token = await getToken();
+      const statusRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/billing/subscription-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store'
+      });
+      if (statusRes.ok) {
+        const statusJson = await statusRes.json();
+        if (statusJson.status === 'active') {
+          shouldRedirect = true;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to check subscription status in PricingPage:", err);
+    }
+  }
+
+  if (shouldRedirect) {
+    redirect(appRoutes.dashboard);
+  }
+
   const [user, backendPlans] = await Promise.all([
     currentUser(),
     getBackendPlans()

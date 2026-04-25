@@ -9,13 +9,13 @@ import { Confetti } from "./Confetti";
 
 interface SessionData {
   verified: boolean;
-  planName: string;
-  interval: string;
-  badgeLabel: string;
-  amountFormatted: string;
-  renewalDate: string;
-  sessionIdShort: string;
-  subtitle: string;
+  planName: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  amount: number | null;
+  currency: string | null;
+  sessionId: string;
+  status: string;
 }
 
 export function SuccessOverlay() {
@@ -101,22 +101,22 @@ export function SuccessOverlay() {
                 <h1 className="s-title">Payment successful!</h1>
               </FadeUp>
               <FadeUp>
-                <p className="s-sub">{data.subtitle}</p>
+                <p className="s-sub">Your subscription is now active.</p>
               </FadeUp>
 
               <FadeUp>
                 <div className="plan-badge">
                   <span className="pulse-dot" />
-                  {data.badgeLabel}
+                  {data.planName ?? "Subscription active"}
                 </div>
               </FadeUp>
 
               <FadeUp>
                 <div className="info-box">
-                  <InfoRow label="Plan" value={data.planName} />
-                  <InfoRow label="Amount charged" value={data.amountFormatted} />
-                  <InfoRow label="Next renewal" value={data.renewalDate} />
-                  <InfoRow label="Session ID" value={data.sessionIdShort} mono />
+                  <InfoRow label="Plan" value={data.planName ?? "Unknown"} />
+                  <InfoRow label="Amount charged" value={data.amount ? `$${(data.amount / 100).toFixed(2)}` : "N/A"} />
+                  <InfoRow label="Next renewal" value={data.currentPeriodEnd ? new Date(data.currentPeriodEnd).toLocaleDateString() : "N/A"} />
+                  <InfoRow label="Session ID" value={data.sessionId} mono />
                 </div>
               </FadeUp>
 

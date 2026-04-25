@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { UserButton, useAuth } from "@clerk/nextjs";
 import { clerkRoutes, postAuthRedirectUrl } from "@/lib/clerk-routes";
+import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
+import { Sparkles } from "lucide-react";
 
 export function LandingNavbarActions() {
   const isHydrated = useSyncExternalStore(
@@ -12,6 +14,8 @@ export function LandingNavbarActions() {
     () => false,
   );
   const { isSignedIn } = useAuth();
+  const { data, status } = useSubscriptionStatus();
+  
   const signInUrl = clerkRoutes.signIn;
   const signUpUrl = clerkRoutes.signUp;
 

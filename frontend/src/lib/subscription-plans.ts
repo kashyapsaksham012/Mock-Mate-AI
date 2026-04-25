@@ -28,7 +28,7 @@ export const subscriptionPlans: ReadonlyArray<SubscriptionPlan> = [
     cadence: "/3 interviews",
     features: ["3 interview trials", "Basic AI feedback", "Community support"],
     ctaLabel: "Start Free Trial",
-    ctaHref: appRoutes.dashboardNew,
+    ctaHref: appRoutes.dashboard,
   },
   {
     id: "monthly",
@@ -38,7 +38,7 @@ export const subscriptionPlans: ReadonlyArray<SubscriptionPlan> = [
     cadence: "/month",
     features: ["Unlimited interviews", "Voice mode", "Detailed score breakdown", "Priority support"],
     ctaLabel: "Upgrade to Monthly",
-    ctaHref: appRoutes.dashboardNew,
+    ctaHref: appRoutes.dashboard,
     backendPlanType: "pro_monthly",
     popular: true,
   },
@@ -55,7 +55,7 @@ export const subscriptionPlans: ReadonlyArray<SubscriptionPlan> = [
       "Role-based access",
     ],
     ctaLabel: "Start Yearly Plan",
-    ctaHref: appRoutes.dashboardNew,
+    ctaHref: appRoutes.dashboard,
     backendPlanType: "pro_annual",
   },
 ] as const;

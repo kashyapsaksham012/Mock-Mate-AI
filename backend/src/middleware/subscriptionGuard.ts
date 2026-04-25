@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { ClerkAuthRequest } from './auth';
-import { redis } from '../config/redis';
 import { db } from '../config/db';
 import { subscriptions, plans } from '../models/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, gt } from 'drizzle-orm';
 import { ForbiddenError } from '../utils/errors';
 
 export const subscriptionGuard = async (req: Request, res: Response, next: NextFunction) => {
@@ -14,32 +13,39 @@ export const subscriptionGuard = async (req: Request, res: Response, next: NextF
       return next(new ForbiddenError('User not authenticated'));
     }
 
-    // 1. Redis cache check (fast path)
-    const cached = await redis.get(`sub:status:${userId}`);
-    if (cached) {
-      const sub = JSON.parse(cached);
-      if (sub.status !== 'active') {
-        return res.status(403).json({
-          error: 'SUBSCRIPTION_REQUIRED',
-          message: 'Active subscription needed to access this feature',
-        });
-      }
-      (req as any).subscription = sub;
-      return next();
-    }
-
-    // 2. DB fallback (slow path, then cache)
-    const activeSub = await db.select({
+    const now = new Date();
+    let activeSub = await db.select({
       id: subscriptions.id,
       status: subscriptions.status,
       currentPeriodEnd: subscriptions.currentPeriodEnd,
+      cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
       planName: plans.name,
     })
     .from(subscriptions)
     .innerJoin(plans, eq(subscriptions.planId, plans.id))
-    .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, 'active')))
+    .where(and(
+      eq(subscriptions.userId, userId),
+      eq(subscriptions.status, 'active'),
+      gt(subscriptions.currentPeriodEnd, now),
+    ))
     .limit(1)
-    .then(res => res[0]);
+    .then((result) => result[0]);
+
+    if (!activeSub) {
+      console.log(`[SubscriptionGuard] No active sub for ${userId} in DB. Attempting sync...`);
+      const { BillingService } = require('../modules/billing/billing.service');
+      const syncedSub = await BillingService.syncSubscriptionStatus(userId);
+      
+      if (syncedSub && syncedSub.status === 'active' && syncedSub.currentPeriodEnd > now) {
+        activeSub = {
+          id: syncedSub.id,
+          status: syncedSub.status,
+          currentPeriodEnd: syncedSub.currentPeriodEnd,
+          cancelAtPeriodEnd: syncedSub.cancelAtPeriodEnd,
+          planName: syncedSub.plan?.name ?? 'Unknown',
+        };
+      }
+    }
 
     if (!activeSub) {
       return res.status(403).json({ 
@@ -48,16 +54,14 @@ export const subscriptionGuard = async (req: Request, res: Response, next: NextF
       });
     }
 
-    // Cache the active subscription
-    const cacheData = {
+    (req as any).subscription = {
+      id: activeSub.id,
       status: activeSub.status,
       planName: activeSub.planName,
-      periodEnd: activeSub.currentPeriodEnd,
+      currentPeriodEnd: activeSub.currentPeriodEnd,
+      cancelAtPeriodEnd: activeSub.cancelAtPeriodEnd,
     };
-    
-    await redis.setex(`sub:status:${userId}`, 300, JSON.stringify(cacheData)); // TTL 5 min
 
-    (req as any).subscription = cacheData;
     next();
   } catch (error) {
     next(error);
