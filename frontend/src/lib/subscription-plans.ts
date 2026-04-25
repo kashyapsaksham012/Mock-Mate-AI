@@ -9,6 +9,7 @@ export type SubscriptionPlan = {
   features: ReadonlyArray<string>;
   ctaLabel: string;
   ctaHref: string;
+  backendPlanType?: "pro_monthly" | "pro_annual";
   popular?: boolean;
 };
 
@@ -38,17 +39,24 @@ export const subscriptionPlans: ReadonlyArray<SubscriptionPlan> = [
     features: ["Unlimited interviews", "Voice mode", "Detailed score breakdown", "Priority support"],
     ctaLabel: "Upgrade to Monthly",
     ctaHref: appRoutes.dashboardNew,
+    backendPlanType: "pro_monthly",
     popular: true,
   },
   {
-    id: "team-monthly",
-    name: "Team Monthly",
-    subtitle: "Built for teams and cohorts",
+    id: "yearly",
+    name: "Yearly",
+    subtitle: "For consistent interview prep",
     price: "$49",
-    cadence: "/month",
-    features: ["Everything in Monthly", "Team dashboard", "Usage insights", "Role-based access"],
-    ctaLabel: "Start Team Plan",
+    cadence: "/yearly",
+    features: [
+      "Everything in Monthly",
+      "Team dashboard",
+      "Usage insights",
+      "Role-based access",
+    ],
+    ctaLabel: "Start Yearly Plan",
     ctaHref: appRoutes.dashboardNew,
+    backendPlanType: "pro_annual",
   },
 ] as const;
 

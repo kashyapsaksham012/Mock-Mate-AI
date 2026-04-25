@@ -1,16 +1,10 @@
-import Link from "next/link";
-import { Check } from "lucide-react";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { PricingNavbar } from "@/components/pricing-navbar";
+import { PricingCard } from "@/components/pricing-card";
 import { subscriptionPageCopy, subscriptionPlans } from "@/lib/subscription-plans";
 
 export default async function PricingPage() {
-  const { userId } = await auth();
   const user = await currentUser();
-
-  if (!userId) {
-    return null;
-  }
 
   return (
     <main className="landing-wrapper min-h-screen">
@@ -37,30 +31,7 @@ export default async function PricingPage() {
 
         <div className="pricing-grid">
           {subscriptionPlans.map((plan) => (
-            <article key={plan.id} className={`pricing-card glass fade-up visible ${plan.popular ? "popular" : ""}`}>
-              {plan.popular && <span className="popular-badge">{subscriptionPageCopy.popularBadge}</span>}
-              <h3>{plan.name}</h3>
-              <p className="text-muted">{plan.subtitle}</p>
-              <div className="price">
-                {plan.price}
-                <span>{plan.cadence}</span>
-              </div>
-              <ul className="pricing-features">
-                {plan.features.map((feature) => (
-                  <li key={feature}>
-                    <Check size={18} />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={plan.ctaHref}
-                className={`btn ${plan.popular ? "btn-primary" : "btn-secondary"}`}
-                style={{ width: "100%", justifyContent: "center" }}
-              >
-                {plan.ctaLabel}
-              </Link>
-            </article>
+            <PricingCard key={plan.id} plan={plan} />
           ))}
         </div>
       </section>
