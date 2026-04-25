@@ -57,7 +57,12 @@ export default async function PricingPage() {
 
   // Merge backend data with frontend static metadata
   const dynamicPlans = subscriptionPlans.map(plan => {
-    const backendPlan = backendPlans.find((planRecord: BackendPlan) => planRecord.name === (plan.backendPlanType === "pro_annual" ? "yearly" : "monthly"));
+    if (!plan.backendPlanType) return plan;
+    
+    const backendPlan = backendPlans.find((planRecord: BackendPlan) => 
+      planRecord.name === (plan.backendPlanType === "pro_annual" ? "yearly" : "monthly")
+    );
+
     if (backendPlan) {
       return {
         ...plan,

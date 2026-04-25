@@ -68,11 +68,11 @@ export function PricingCard({ plan }: PricingCardProps) {
         {plan.price}
         <span>{plan.cadence}</span>
       </div>
-      <ul className="pricing-features">
+      <ul className="pricing-features flex-1">
         {plan.features.map((feature) => (
-          <li key={feature}>
-            <Check size={18} />
-            {feature}
+          <li key={feature} className="flex items-start gap-3">
+            <Check size={18} className="shrink-0 text-indigo-400 mt-1" />
+            <span className="text-sm text-slate-300">{feature}</span>
           </li>
         ))}
       </ul>
