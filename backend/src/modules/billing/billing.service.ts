@@ -22,56 +22,71 @@ export class BillingService {
   }
 
   static async createSubscriptionSession(userId: string, planName: string, successUrl: string, cancelUrl: string) {
-    let user = await db.query.users.findFirst({
-      where: eq(users.id, userId),
-    });
-
-    if (!user) {
-      console.log(`[BillingService] User ${userId} not found in DB. Performing JIT sync...`);
-      await this.syncUserFromClerk(userId);
-      user = await db.query.users.findFirst({ where: eq(users.id, userId) });
-    }
-
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
-
-    const productId = planName === 'yearly' ? env.STRIPE_YEARLY_PRODUCT_ID : env.STRIPE_MONTHLY_PRODUCT_ID;
-    const product = await stripe.products.retrieve(productId);
-
-    if (!product.default_price) {
-      throw new AppError(`Product ${planName} is missing default price`, 400);
-    }
-
-    const stripePriceId = product.default_price as string;
-    await db.update(plans).set({ stripePriceId }).where(eq(plans.name, planName));
-
-    let stripeCustomerId = user.stripeCustomerId;
-    if (!stripeCustomerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.fullName || undefined,
-        metadata: { userId: user.id },
+    try {
+      let user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
       });
 
-      stripeCustomerId = customer.id;
-      await db.update(users).set({ stripeCustomerId }).where(eq(users.id, userId));
+      if (!user) {
+        console.log(`[BillingService] User ${userId} not found in DB. Performing JIT sync...`);
+        await this.syncUserFromClerk(userId);
+        user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+      }
+
+      if (!user) {
+        throw new AppError('User not found after sync', 404);
+      }
+
+      const productId = planName === 'yearly' ? env.STRIPE_YEARLY_PRODUCT_ID : env.STRIPE_MONTHLY_PRODUCT_ID;
+      
+      let product;
+      try {
+        product = await stripe.products.retrieve(productId);
+      } catch (e: any) {
+        console.error(`[StripeError] Failed to retrieve product ${productId}:`, e.message);
+        throw new AppError(`Subscription plan configuration error: Product ${planName} not found in Stripe.`, 502);
+      }
+
+      if (!product.default_price) {
+        throw new AppError(`Product ${planName} is missing a default price in Stripe dashboard`, 400);
+      }
+
+      const stripePriceId = product.default_price as string;
+      
+      // Update our local DB with the latest price ID from Stripe
+      await db.update(plans).set({ stripePriceId }).where(eq(plans.name, planName));
+
+      let stripeCustomerId = user.stripeCustomerId;
+      if (!stripeCustomerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          name: user.fullName || undefined,
+          metadata: { userId: user.id },
+        });
+
+        stripeCustomerId = customer.id;
+        await db.update(users).set({ stripeCustomerId }).where(eq(users.id, userId));
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        customer: stripeCustomerId,
+        payment_method_types: ['card'],
+        line_items: [{ price: stripePriceId, quantity: 1 }],
+        mode: 'subscription',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        client_reference_id: userId,
+        subscription_data: {
+          metadata: { userId, planName },
+        },
+      });
+
+      return { sessionId: session.id, url: session.url };
+    } catch (error: any) {
+      if (error instanceof AppError) throw error;
+      console.error('[BillingService Error]:', error);
+      throw new AppError(`Unexpected billing error: ${error.message}`, 500);
     }
-
-    const session = await stripe.checkout.sessions.create({
-      customer: stripeCustomerId,
-      payment_method_types: ['card'],
-      line_items: [{ price: stripePriceId, quantity: 1 }],
-      mode: 'subscription',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      client_reference_id: userId,
-      subscription_data: {
-        metadata: { userId, planName },
-      },
-    });
-
-    return { sessionId: session.id, url: session.url };
   }
 
   private static async syncUserFromClerk(userId: string) {
