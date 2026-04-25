@@ -14,6 +14,24 @@ router.get('/plans', async (req: Request, res: Response, next: NextFunction) => 
   }
 });
 
+// GET /api/billing/verify-session - Protected
+router.get('/verify-session', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { session_id } = req.query;
+    const authReq = req as unknown as ClerkAuthRequest;
+    const userId = authReq.auth.userId;
+
+    if (!session_id || typeof session_id !== 'string') {
+      return res.status(400).json({ error: 'INVALID_SESSION' });
+    }
+
+    const data = await BillingService.verifyCheckoutSession(session_id, userId);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // All below are protected
 router.use(requireAuth);
 

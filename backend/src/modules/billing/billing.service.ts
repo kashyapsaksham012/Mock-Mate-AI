@@ -17,10 +17,31 @@ export class BillingService {
   /**
    * Creates or retrieves a Stripe customer and generates a checkout session for a subscription.
    */
-  static async createSubscriptionSession(userId: string, planName: 'monthly' | 'yearly', successUrl: string, cancelUrl: string) {
-    // 1. Get user from DB
-    const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
-    if (!user) throw new NotFoundError('User not found');
+  static async createSubscriptionSession(userId: string, planName: string, successUrl: string, cancelUrl: string) {
+    // 1. Get/Sync User
+    let user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+
+    // JIT Sync: If user not in DB, create them now
+    if (!user) {
+      console.log(`[BillingService] User ${userId} not found in DB. Performing JIT sync...`);
+      // We assume the user is authenticated via Clerk (checked in middleware)
+      // For now, we'll create a skeletal user - real data comes from Clerk webhooks
+      // But we need the record to exist for foreign key constraints
+      await db.insert(users).values({
+        id: userId,
+        email: 'sync-pending@example.com', // Placeholder until webhook hits or we fetch from Clerk
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      
+      user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+    }
+
+    if (!user) throw new Error('USER_NOT_FOUND');
 
     const productId = planName === 'yearly' ? env.STRIPE_YEARLY_PRODUCT_ID : env.STRIPE_MONTHLY_PRODUCT_ID;
 
@@ -116,5 +137,58 @@ export class BillingService {
       .where(eq(subscriptions.id, activeSub.id));
       
     return updatedStripeSub;
+  }
+
+  /**
+   * Verified a Stripe checkout session and returns details for the success UI.
+   */
+  static async verifyCheckoutSession(sessionId: string, userId: string) {
+    // 1. Idempotency — already verified? return from cache
+    const cached = await redis.get(`session:verified:${sessionId}`);
+    if (cached) return JSON.parse(cached);
+
+    // 2. Fetch from Stripe — source of truth
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['subscription', 'subscription.plan.product'],
+    });
+
+    // 3. Security — Check if the session belongs to the user
+    // We can verify this via client_reference_id which we set during session creation
+    if (session.client_reference_id !== userId) {
+      throw new Error('SESSION_MISMATCH');
+    }
+
+    // 4. Payment must be paid
+    if (session.payment_status !== 'paid') {
+      throw new Error('PAYMENT_NOT_COMPLETE');
+    }
+
+    const sub = session.subscription as any;
+    const plan = sub.items.data[0].plan;
+    const isYearly = plan.interval === 'year';
+
+    // 5. Calculate renewal date
+    const renewalDate = new Date(sub.current_period_end * 1000);
+    const formatted = renewalDate.toLocaleDateString('en-US', {
+      month: 'long', day: 'numeric', year: 'numeric'
+    });
+
+    const payload = {
+      verified: true,
+      planName:     isYearly ? 'Pro Yearly'  : 'Pro Monthly',
+      interval:     isYearly ? 'yearly'      : 'monthly',
+      badgeLabel:   isYearly ? 'Pro Yearly — $49/yr' : 'Pro Monthly — $19/mo',
+      amountFormatted: `$${(session.amount_total! / 100).toFixed(2)}`,
+      renewalDate:  formatted,
+      sessionIdShort: `${sessionId.slice(0, 14)}...${sessionId.slice(-4)}`,
+      subtitle: isYearly
+        ? "You're saving $179 vs monthly. Smart choice!"
+        : "Your subscription is now active. Welcome aboard!",
+    };
+
+    // 6. Cache result for 24hrs (idempotent)
+    await redis.set(`session:verified:${sessionId}`, JSON.stringify(payload), 'EX', 86400);
+
+    return payload;
   }
 }
