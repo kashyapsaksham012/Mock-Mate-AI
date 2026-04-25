@@ -37,3 +37,7 @@ drizzle/migrations/
 dist/
 build/
 *.tsbuildinfo
+
+# Logs and temporary files
+health_output.txt
+*.log

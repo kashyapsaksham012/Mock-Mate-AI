@@ -11,18 +11,26 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "drizzle-orm": "latest",
-    "@neondatabase/serverless": "latest",
-    "ioredis": "latest",
-    "zod": "latest",
-    "axios": "latest",
+    "@clerk/express": "^2.1.5",
     "@google/generative-ai": "latest",
-    "dotenv": "latest"
+    "axios": "latest",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "express": "^5.2.1",
+    "ioredis": "latest",
+    "pg": "^8.20.0",
+    "stripe": "^22.0.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "typescript": "latest",
-    "@types/node": "latest",
-    "tsx": "latest",
-    "drizzle-kit": "latest"
+    "@neondatabase/serverless": "^1.1.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.19.39",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
