@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    /* Colors */
+    /* Original MockMate AI Colors */
     --bg-deep: #080C14;
     --accent-primary: #6366F1;
     --accent-secondary: #8B5CF6;
@@ -19,20 +19,237 @@
         radial-gradient(at 100% 100%, rgba(34, 211, 238, 0.1) 0px, transparent 50%),
         radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
 
-    /* Navbar Constants */
-    --navbar-height: 80px;
-    --navbar-height-scrolled: 64px;
+    /* Layout Primitives */
+    --container-width: 1100px;
+    --card-radius: 24px;
+    --input-radius: 16px;
+    --padding-card: 32px;
+    --section-gap: 48px;
+}
 
-    /* Spacing Constants (Fluid) */
-    --padding-section: clamp(3rem, 8vw, 6rem);
-    --padding-card: clamp(1.25rem, 5vw, 2.5rem);
-    --gap-grid: clamp(1rem, 4vw, 2.5rem);
-    --margin-header: clamp(2rem, 10vw, 5rem);
-    --container-max: 1280px;
+/* High-End Aurora Background Animation */
+.bg-aurora {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -3;
+    background: #02040A;
+    overflow: hidden;
+}
 
-    /* Typography (Fluid) */
-    --font-size-h1: clamp(2.5rem, 8vw, 4rem);
-    --font-size-price: clamp(2.5rem, 10vw, 3.5rem);
+.bg-aurora::before,
+.bg-aurora::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 50% 50%, 
+        rgba(99, 102, 241, 0.15) 0%, 
+        rgba(139, 92, 246, 0.1) 25%, 
+        rgba(34, 211, 238, 0.05) 50%, 
+        transparent 100%);
+    animation: aurora-rotate 30s linear infinite;
+}
+
+.bg-aurora::after {
+    background: radial-gradient(circle at 50% 50%, 
+        rgba(139, 92, 246, 0.1) 0%, 
+        rgba(34, 211, 238, 0.05) 25%, 
+        rgba(99, 102, 241, 0.05) 50%, 
+        transparent 100%);
+    animation: aurora-rotate 20s linear infinite reverse;
+    opacity: 0.5;
+}
+
+@keyframes aurora-rotate {
+    from { transform: rotate(0deg) scale(1); }
+    to { transform: rotate(360deg) scale(1.2); }
+}
+
+.bg-noise-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+/* High-End Navbar (Top block removed to avoid duplication) */
+
+/* Global Centering & Spacing */
+.premium-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    width: 100%;
+}
+
+.section-hero {
+    padding-top: 160px; /* Fully clear the navbar and its top offset */
+    margin-bottom: 48px;
+}
+
+.premium-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: 24px;
+    padding: 32px;
+    transition: all 0.3s ease;
+}
+
+.premium-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+.footer-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    margin-top: 80px;
+}
+
+
+.premium-footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.premium-footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.premium-footer-copy {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    opacity: 0.4;
+    max-width: 500px;
+    line-height: 1.6;
+}
+
+/* Premium Form Elements */
+.premium-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.premium-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.premium-input {
+    height: 56px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--input-radius);
+    padding: 0 20px;
+    color: var(--text-main);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.premium-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+}
+
+/* Pill Selectors */
+.pill-selector {
+    display: flex;
+    gap: 8px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-glass);
+    border-radius: 99px;
+}
+
+.pill-item {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 99px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-muted);
+}
+
+.pill-item.active {
+    background: var(--grad-primary);
+    color: white;
+    box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+}
+
+/* Premium Tags */
+.premium-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+}
+
+.premium-tag:hover {
+    background: rgba(99, 102, 241, 0.2);
+    transform: scale(1.05);
+}
+
+/* Actions */
+.btn-premium-primary {
+    background: var(--grad-primary);
+    color: white;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 1.25rem 2.5rem;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.btn-premium-primary:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4);
+}
+
+/* Custom Checkbox Animation */
+.check-pill {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.check-pill input:checked + div {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: var(--accent-primary);
+    color: white;
 }
 
 /* Base Styles */
@@ -203,7 +420,7 @@ button {
     padding: var(--padding-section) 0;
 }
 
-/* Navbar */
+/* Navbar - $100B SaaS Premium Design */
 .navbar {
     position: fixed;
     top: 1.5rem;
@@ -211,20 +428,23 @@ button {
     transform: translateX(-50%);
     width: calc(100% - 2rem);
     max-width: var(--container-max);
-    height: var(--navbar-height-scrolled);
+    height: var(--navbar-height);
     z-index: 1000;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(8, 12, 20, 0.4);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--border-glass);
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    background: rgba(8, 12, 20, 0.2);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 24px;
+    box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .navbar.scrolled {
     top: 1rem;
-    background: rgba(8, 12, 20, 0.8);
-    border-bottom: 1px solid var(--border-glass);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    height: var(--navbar-height-scrolled);
+    background: rgba(8, 12, 20, 0.6);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .nav-container {
@@ -256,14 +476,17 @@ button {
 }
 
 .nav-link {
-    font-size: 0.9375rem;
-    font-weight: 500;
+    font-size: 0.875rem;
+    font-weight: 600;
     color: var(--text-muted);
-    transition: color 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    padding: 0.5rem 0.875rem;
+    border-radius: 99px;
 }
 
 .nav-link:hover {
     color: var(--text-main);
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .nav-actions {
@@ -1107,7 +1330,93 @@ button {
     }
 }
 
-/* Footer */
+/* Dashboard & Setup Refinements */
+/* Variables moved to :root */
+
+/* Enhanced Glassmorphism */
+.glass-panel {
+background: var(--glass-bg);
+backdrop-filter: blur(16px);
+-webkit-backdrop-filter: blur(16px);
+border: 1px solid var(--glass-border);
+box-shadow: var(--glass-shadow);
+border-radius: var(--card-radius);
+transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel:hover {
+border-color: rgba(255, 255, 255, 0.15);
+background: rgba(15, 23, 42, 0.7);
+transform: translateY(-2px);
+}
+
+/* Form Styling */
+.input-field {
+width: 100%;
+background: rgba(255, 255, 255, 0.03);
+border: 1px solid var(--glass-border);
+border-radius: var(--input-radius);
+padding: 1rem 1.25rem;
+color: var(--text-main);
+transition: all 0.3s ease;
+font-size: 0.95rem;
+}
+
+.input-field:focus {
+outline: none;
+border-color: var(--accent-primary);
+background: rgba(255, 255, 255, 0.06);
+box-shadow: 0 0 0 4px var(--input-focus);
+}
+
+.input-label {
+display: block;
+font-size: 0.85rem;
+font-weight: 600;
+color: var(--text-muted);
+margin-bottom: 0.6rem;
+letter-spacing: 0.02em;
+text-transform: uppercase;
+}
+
+/* Custom Select */
+.select-wrapper {
+position: relative;
+}
+
+.select-wrapper::after {
+content: '▼';
+position: absolute;
+right: 1.25rem;
+top: 50%;
+transform: translateY(-50%);
+font-size: 0.7rem;
+color: var(--text-muted);
+pointer-events: none;
+}
+
+/* Checkbox/Radio Polish */
+.custom-option {
+display: flex;
+align-items: center;
+gap: 0.75rem;
+padding: 0.75rem 1rem;
+border-radius: 12px;
+background: rgba(255, 255, 255, 0.03);
+border: 1px solid var(--glass-border);
+cursor: pointer;
+transition: all 0.2s ease;
+}
+
+.custom-option:hover {
+background: rgba(255, 255, 255, 0.05);
+}
+
+.custom-option.selected {
+background: rgba(99, 102, 241, 0.1);
+border-color: var(--accent-primary);
+}
+
 footer {
     padding: 100px 0 60px;
     border-top: 1px solid var(--border-glass);
