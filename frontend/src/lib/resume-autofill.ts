@@ -11,15 +11,17 @@ export async function uploadResume(file: File, token: string | null): Promise<Re
     throw new Error("You must be signed in to upload a resume");
   }
 
+  const formData = new FormData();
+  formData.append("file", file);
+
   const response = await fetch(`${backendUrl}/api/resume/upload`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": file.type || "application/octet-stream",
-      "x-file-name": file.name,
-      "x-file-type": file.type || "application/octet-stream",
+      // Note: Do NOT set Content-Type header here. 
+      // The browser will automatically set it with the correct boundary.
     },
-    body: await file.arrayBuffer(),
+    body: formData,
   });
 
   if (!response.ok) {

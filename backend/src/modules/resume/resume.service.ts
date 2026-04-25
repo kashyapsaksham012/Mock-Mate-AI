@@ -147,10 +147,11 @@ export class ResumeService {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder: env.CLOUDINARY_UPLOAD_FOLDER,
-          resource_type: 'raw',
+          resource_type: 'auto',
           public_id: publicId,
           format: ext,
           overwrite: false,
+          access_mode: 'public',
         },
         (error, result) => {
           if (error || !result?.secure_url) {
@@ -217,18 +218,20 @@ export class ResumeService {
     }
 
     const prompt = [
-      'Extract structured information from this resume.',
+      'Extract a high-fidelity, comprehensive profile from this resume.',
+      'Provide a detailed overview of the experience, capturing key achievements and tenure.',
+      'Ensure every technical and soft skill mentioned is included in the skills array.',
       'Return ONLY JSON in this exact shape:',
       '{',
-      '  "fullName": "",',
-      '  "email": "",',
-      '  "currentRole": "",',
-      '  "experience": "",',
-      '  "skills": [],',
-      '  "primaryDomain": "",',
-      '  "targetRole": ""',
+      '  "fullName": "Full legal name",',
+      '  "email": "Email address",',
+      '  "currentRole": "Most recent professional title",',
+      '  "experience": "A comprehensive, multi-sentence summary of overall professional experience and key achievements",',
+      '  "skills": ["Skill 1", "Skill 2", "..."],',
+      '  "primaryDomain": "Broad technical domain (e.g., Full Stack Development, Data Science)",',
+      '  "targetRole": "The role the user is likely aiming for based on their trajectory"',
       '}',
-      'If a field is missing, return an empty string or empty array. Do not explain.',
+      'Be descriptive. Do not truncate experience. If a field is missing, return an empty string or empty array.',
       'Resume text:',
       text,
     ].join('\n');

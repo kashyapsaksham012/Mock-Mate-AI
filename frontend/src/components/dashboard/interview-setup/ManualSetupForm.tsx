@@ -36,8 +36,8 @@ export function ManualSetupForm({
   const [techStack, setTechStack] = useState<string[]>(() => resumeData.skills);
   const [newSkill, setNewSkill] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('');
-  const [difficulty, setDifficulty] = useState('');
-  const [interviewType, setInterviewType] = useState('');
+  const [difficulty, setDifficulty] = useState(() => resumeData.lastDifficulty || 'Medium');
+  const [interviewType, setInterviewType] = useState('Technical');
   const [duration, setDuration] = useState('');
   const [focusAreas, setFocusAreas] = useState<string[]>([]);
   const [newFocusArea, setNewFocusArea] = useState('');

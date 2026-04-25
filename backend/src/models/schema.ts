@@ -87,10 +87,25 @@ export const resumeProfiles = pgTable('resume_profiles', {
   targetRole: text('target_role'),
   fileUrl: text('file_url'),
   parserSource: text('parser_source'),
+  lastDifficulty: text('last_difficulty').default('Medium'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => {
   return {
     userIdx: index('idx_resume_profiles_user_id').on(table.userId),
+  };
+});
+
+// Interview Sessions table
+export const interviewSessions = pgTable('interview_sessions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  targetRole: text('target_role').notNull(),
+  difficulty: text('difficulty').notNull(),
+  questions: jsonb('questions').notNull(), // Array of {id, question, type, hint}
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => {
+  return {
+    userIdx: index('idx_interview_sessions_user_id').on(table.userId),
   };
 });
 
@@ -100,6 +115,14 @@ export const usersRelations = relations(users, ({ many }) => ({
   payments: many(payments),
   auditLogs: many(auditLogs),
   resumeProfiles: many(resumeProfiles),
+  interviewSessions: many(interviewSessions),
+}));
+
+export const interviewSessionsRelations = relations(interviewSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [interviewSessions.userId],
+    references: [users.id],
+  }),
 }));
 
 export const subscriptionsRelations = relations(subscriptions, ({ one, many }) => ({

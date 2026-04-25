@@ -27,13 +27,32 @@ export class InterviewService {
       fullName: payload.fullName || profile?.fullName || '',
     };
 
+    let questions: any[];
     try {
       const gemini = await this.generateWithGemini(merged);
-      return interviewGenerateResponseSchema.parse(gemini);
+      const parsed = interviewGenerateResponseSchema.parse(gemini);
+      questions = parsed.questions;
     } catch (error) {
       console.warn('[InterviewService] Gemini generation failed, using fallback questions.', error);
-      return this.generateFallback(merged);
+      const fallback = this.generateFallback(merged);
+      questions = fallback.questions;
     }
+
+    // SAVE TO DATABASE
+    const { interviewSessions } = require('../../models/schema');
+    await db.insert(interviewSessions).values({
+      userId,
+      targetRole: merged.targetRole,
+      difficulty: merged.difficulty,
+      questions,
+    });
+
+    // UPDATE USER PREFERENCE
+    await db.update(resumeProfiles)
+      .set({ lastDifficulty: merged.difficulty })
+      .where(eq(resumeProfiles.userId, userId));
+
+    return { questions };
   }
 
   private static async generateWithGemini(input: {

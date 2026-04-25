@@ -10,7 +10,7 @@ import { type ResumeAutofillData } from "@/types/resume";
 const config = {
   title: "Import your background",
   description: "Upload your resume to extract structured profile data and pre-fill the form.",
-  formats: "PDF or DOCX up to 10MB",
+  formats: "PDF or DOCX up to 5MB",
   analyzingText: "Analyzing your career path...",
   successTag: "VERIFIED",
 };
@@ -34,6 +34,14 @@ export function ResumeUploadSection({ onResumeParsed, onResumeCleared }: ResumeU
 
     const input = e.currentTarget;
     setError(null);
+
+    // Enforce 5MB limit
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setError("File size exceeds 5MB limit. Please upload a smaller file.");
+      input.value = '';
+      return;
+    }
+
     setIsUploading(true);
 
     try {

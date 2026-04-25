@@ -6,6 +6,7 @@ export type ResumeAutofillData = {
   skills: string[];
   primaryDomain: string;
   targetRole: string;
+  lastDifficulty?: string;
 };
 
 export const emptyResumeAutofillData: ResumeAutofillData = {
@@ -16,6 +17,7 @@ export const emptyResumeAutofillData: ResumeAutofillData = {
   skills: [],
   primaryDomain: '',
   targetRole: '',
+  lastDifficulty: 'Medium',
 };
 
 export type ResumeUploadResponse = {
