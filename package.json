@@ -1,0 +1,13 @@
+{
+  "name": "mock-mate-ai",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "frontend:dev": "npm run dev -w frontend",
+    "backend:dev": "npm run dev -w backend"
+  }
+}

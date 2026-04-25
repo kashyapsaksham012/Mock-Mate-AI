@@ -1,0 +1,28 @@
+{
+  "name": "mock-mate-backend",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "drizzle-orm": "latest",
+    "@neondatabase/serverless": "latest",
+    "ioredis": "latest",
+    "zod": "latest",
+    "axios": "latest",
+    "@google/generative-ai": "latest",
+    "dotenv": "latest"
+  },
+  "devDependencies": {
+    "typescript": "latest",
+    "@types/node": "latest",
+    "tsx": "latest",
+    "drizzle-kit": "latest"
+  }
+}
