@@ -3,8 +3,35 @@ import { PricingNavbar } from "@/components/pricing-navbar";
 import { PricingCard } from "@/components/pricing-card";
 import { subscriptionPageCopy, subscriptionPlans } from "@/lib/subscription-plans";
 
+async function getBackendPlans() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/billing/plans`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data || [];
+  } catch (err) {
+    console.error("Failed to fetch backend plans:", err);
+    return [];
+  }
+}
+
 export default async function PricingPage() {
-  const user = await currentUser();
+  const [user, backendPlans] = await Promise.all([
+    currentUser(),
+    getBackendPlans()
+  ]);
+
+  // Merge backend data with frontend static metadata
+  const dynamicPlans = subscriptionPlans.map(plan => {
+    const backendPlan = backendPlans.find((p: any) => p.name === (plan.backendPlanType === "pro_annual" ? "yearly" : "monthly"));
+    if (backendPlan) {
+      return {
+        ...plan,
+        price: `$${backendPlan.priceCents / 100}`,
+      };
+    }
+    return plan;
+  });
 
   return (
     <main className="landing-wrapper min-h-screen">
@@ -30,7 +57,7 @@ export default async function PricingPage() {
         </div>
 
         <div className="pricing-grid">
-          {subscriptionPlans.map((plan) => (
+          {dynamicPlans.map((plan) => (
             <PricingCard key={plan.id} plan={plan} />
           ))}
         </div>

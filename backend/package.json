@@ -1,36 +1,42 @@
 {
-  "name": "mock-mate-backend",
-  "version": "0.1.0",
+  "name": "backend",
+  "version": "1.0.0",
   "private": true,
-  "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "nodemon",
     "build": "tsc",
+    "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:push-force": "drizzle-kit push --force",
+    "seed": "ts-node-dev --transpile-only src/seed.ts"
   },
   "dependencies": {
-    "@clerk/express": "^2.1.5",
-    "@google/generative-ai": "latest",
-    "axios": "latest",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "drizzle-orm": "^0.45.2",
-    "express": "^5.2.1",
-    "ioredis": "latest",
-    "pg": "^8.20.0",
-    "stripe": "^22.0.2",
-    "zod": "^4.3.6"
+    "@clerk/clerk-sdk-node": "^4.13.23",
+    "@neondatabase/serverless": "^0.9.5",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "stripe": "^15.1.0",
+    "svix": "^1.92.2",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@neondatabase/serverless": "^1.1.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/node": "^20.19.39",
-    "@types/pg": "^8.20.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.12.7",
+    "@types/pg": "^8.11.6",
     "drizzle-kit": "^0.31.10",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "drizzle-orm": "^0.45.2",
+    "nodemon": "^3.1.14",
+    "pg": "^8.20.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.5"
   }
 }

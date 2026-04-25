@@ -29,21 +29,25 @@ export function PricingCard({ plan }: PricingCardProps) {
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payment/create-checkout-session`, {
+      const planName = plan.backendPlanType === "pro_annual" ? "yearly" : "monthly";
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/billing/subscribe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          planType: plan.backendPlanType,
+          planName: planName,
+          successUrl: `${window.location.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${window.location.origin}/pricing`,
         }),
       });
 
       const data = await response.json();
 
-      if (data.success && data.data.url) {
-        window.location.href = data.data.url;
+      if (response.ok && data.url) {
+        window.location.href = data.url;
       } else {
         throw new Error(data.error || "Failed to create checkout session");
       }
