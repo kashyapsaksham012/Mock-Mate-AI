@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
-import { 
+import { useEffect, useState, useRef } from "react";
+import {
   Sparkles, 
-  ArrowRight, 
   PlayCircle, 
   Star, 
   CheckCircle2, 
@@ -17,8 +16,14 @@ import {
   BarChart3, 
   Database, 
   LayoutDashboard,
-  Check
+  Check,
+  Globe,
+  X as XIcon,
+  Briefcase,
+  Code2
 } from "lucide-react";
+import { HeroCTA } from "@/components/hero-cta";
+import { LandingNavbarActions } from "@/components/landing-navbar-actions";
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -29,26 +34,243 @@ export default function LandingPage() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const mockupSidebarRef = useRef<HTMLDivElement>(null);
 
-  const demoData = {
-    technical: {
-      label: "Technical Interview",
-      question: "How do you handle race conditions in a distributed system?",
-      answer: "I would implement distributed locking using a tool like Redis (Redlock) or use optimistic locking with versioning in the database. Additionally, ensuring idempotency in event processing...",
-      score: "9.2/10"
+  const landingData = {
+    brand: {
+      name: "MockMate",
+      tagline: "Ace Every Interview. With AI That Knows You.",
+      description: "Personalized mock interviews for any role, any level. Real feedback. Real improvement. Land the job you deserve.",
+      status: "All systems operational",
     },
-    behavioral: {
-      label: "Behavioral Interview",
-      question: "Tell me about a time you had a conflict with a teammate.",
-      answer: "I once disagreed with a senior dev about a database schema change. I scheduled a quick sync, brought data to support my approach, but ultimately listened to their concerns about maintenance cost...",
-      score: "8.8/10"
+    navigation: {
+      links: [
+        { label: "Features", href: "#features" },
+        { label: "How It Works", href: "#how-it-works" },
+        { label: "Pricing", href: "#pricing" },
+        { label: "Testimonials", href: "#testimonials" },
+      ],
     },
-    hr: {
-      label: "HR Interview",
-      question: "Where do you see yourself in five years?",
-      answer: "I want to have mastered the technical stack here and be mentoring junior engineers, while potentially moving into a technical leadership role where I can influence architectural decisions...",
-      score: "9.5/10"
+    hero: {
+      eyebrow: "Powered by Gemini AI",
+      title: {
+        part1: "Ace Every Interview.",
+        gradient: "With AI That",
+        part2: "Knows You.",
+      },
+      description: "Personalized mock interviews for any role, any level. Real feedback. Real improvement. Land the job you deserve.",
+      ctas: [
+        { label: "Watch Demo", href: "#how-it-works", primary: false, icon: <PlayCircle size={18} /> },
+      ],
+      socialProof: {
+        trustedBy: "Trusted by 12,000+ candidates",
+        rating: "4.9/5",
+      }
+    },
+    mockup: {
+      label: "Ongoing Interview",
+      question: "Explain how you'd architect a scalable microservices system",
+      feedback: {
+        label: "AI Feedback",
+        score: "8.5/10",
+        items: [
+          { type: "positive", text: "Excellent depth on container orchestration and service mesh patterns." },
+          { type: "negative", text: "Consider mentioning circuit breakers for better fault tolerance." },
+        ]
+      },
+      demos: {
+        technical: {
+          label: "Technical Interview",
+          question: "How do you handle race conditions in a distributed system?",
+          answer: "I would implement distributed locking using a tool like Redis (Redlock) or use optimistic locking with versioning in the database. Additionally, ensuring idempotency in event processing...",
+          score: "9.2/10"
+        },
+        behavioral: {
+          label: "Behavioral Interview",
+          question: "Tell me about a time you had a conflict with a teammate.",
+          answer: "I once disagreed with a senior dev about a database schema change. I scheduled a quick sync, brought data to support my approach, but ultimately listened to their concerns about maintenance cost...",
+          score: "8.8/10"
+        },
+        hr: {
+          label: "HR Interview",
+          question: "Where do you see yourself in five years?",
+          answer: "I want to have mastered the technical stack here and be mentoring junior engineers, while potentially moving into a technical leadership role where I can influence architectural decisions...",
+          score: "9.5/10"
+        }
+      }
+    },
+    howItWorks: {
+      label: "The Process",
+      steps: [
+        { 
+          number: "01", 
+          icon: <Settings size={48} />, 
+          title: "Set Your Stage", 
+          description: "Choose your target role, industry, and experience level to customize your session." 
+        },
+        { 
+          number: "02", 
+          icon: <Mic size={48} />, 
+          title: "Face the AI", 
+          description: "Engage in a live conversation with our Gemini-powered AI that adapts to your answers." 
+        },
+        { 
+          number: "03", 
+          icon: <TrendingUp size={48} />, 
+          title: "Level Up", 
+          description: "Receive instant, detailed feedback with scoring and ideal answer suggestions." 
+        },
+      ]
+    },
+    features: {
+      title: "Engineered for Excellence",
+      items: [
+        { 
+          title: "AI Question Engine", 
+          description: "Gemini AI generates role-specific questions that adapt to your experience level in real-time.",
+          icon: <BrainCircuit size={32} />,
+          large: true
+        },
+        { 
+          title: "Adaptive Difficulty", 
+          description: "Challenges that grow with you.",
+          icon: <Zap size={32} />
+        },
+        { 
+          title: "Voice Mode", 
+          description: "Natural speech interaction.",
+          icon: <Volume2 size={32} />
+        },
+        { 
+          title: "Detailed Feedback", 
+          description: "Comprehensive breakdown of your performance across clarity, accuracy, and depth.",
+          icon: <BarChart3 size={32} />,
+          large: true,
+          showMeter: true,
+          meterValue: "8.7/10"
+        },
+        { 
+          title: "500+ Questions", 
+          description: "Curated from top companies.",
+          icon: <Database size={32} />
+        },
+        { 
+          title: "Analytics", 
+          description: "Track your growth daily.",
+          icon: <LayoutDashboard size={32} />
+        },
+      ]
+    },
+    stats: [
+      { label: "Interviews Completed", value: "12K+" },
+      { label: "Confidence Boost", value: "94%" },
+      { label: "Avg Feedback Score", value: "8.7" },
+      { label: "Faster Prep", value: "3x" },
+    ],
+    testimonials: {
+      title: "Real candidates. Real results.",
+      items: [
+        { name: "Josh Doe", role: "Software Engineer → Google", initial: "JD", color: "#6366F1", text: "MockMate's feedback was more detailed than my actual internship feedback at Google. It caught my habit of over-explaining simple concepts." },
+        { name: "Sarah Miller", role: "Product Manager → Stripe", initial: "SM", color: "#22D3EE", text: "I failed 6 interviews before MockMate. Got an offer at Stripe within 3 weeks of using the platform daily." },
+        { name: "Alex Kim", role: "Frontend Dev → Vercel", initial: "AK", color: "#8B5CF6", text: "The adaptive questions actually challenged me. Generic prep tools never did that. It felt like a real conversation with a senior lead." }
+      ]
+    },
+    pricing: {
+      title: "Simple, transparent pricing",
+      annualDiscount: "Save 30%",
+      plans: [
+        {
+          name: "Free",
+          price: { monthly: "$0", annual: "$0" },
+          features: ["3 interviews / month", "Basic feedback", "Community access"],
+          cta: "Get Started",
+          popular: false
+        },
+        {
+          name: "Pro",
+          price: { monthly: "$19", annual: "$159" },
+          features: ["Unlimited interviews", "Voice mode", "Resume-based questions", "Full analytics"],
+          cta: "Get Pro",
+          popular: true
+        },
+        {
+          name: "Team",
+          price: { monthly: "$49", annual: "$399" },
+          features: ["Everything in Pro", "Team dashboard", "Bulk reports", "Custom roles"],
+          cta: "Contact Sales",
+          popular: false
+        }
+      ]
+    },
+    footer: {
+      brandDesc: "Empowering next-generation candidates to ace their dream jobs with Gemini-powered intelligence.",
+      sections: [
+        {
+          title: "Product",
+          links: [
+            { label: "Features", href: "#features" },
+            { label: "How it works", href: "#how-it-works" },
+            { label: "Pricing", href: "#pricing" },
+            { label: "AI Interviewer", href: "#" },
+            { label: "Voice Mode", href: "#" },
+          ]
+        },
+        {
+          title: "Resources",
+          links: [
+            { label: "Documentation", href: "#" },
+            { label: "Help Center", href: "#" },
+            { label: "Interview Guide", href: "#" },
+            { label: "Success Stories", href: "#" },
+            { label: "Blog", href: "#" },
+          ]
+        },
+        {
+          title: "Company",
+          links: [
+            { label: "About Us", href: "#" },
+            { label: "Careers", href: "#" },
+            { label: "Press Kit", href: "#" },
+            { label: "Contact", href: "#" },
+            { label: "Partner Program", href: "#" },
+          ]
+        },
+        {
+          title: "Legal",
+          links: [
+            { label: "Privacy Policy", href: "#" },
+            { label: "Terms of Service", href: "#" },
+            { label: "Cookie Policy", href: "#" },
+            { label: "Data Security", href: "#" },
+          ]
+        }
+      ],
+      socials: [
+        { name: "Twitter", href: "#", icon: <XIcon size={18} /> },
+        { name: "LinkedIn", href: "#", icon: <Briefcase size={18} /> },
+        { name: "GitHub", href: "#", icon: <Code2 size={18} /> },
+      ]
     }
   };
+
+  const demoTabs: Array<keyof typeof landingData.mockup.demos> = ["technical", "behavioral", "hr"];
+
+  function startHeroTyping() {
+    const text = "To architect a scalable microservices system, I would first focus on decoupling services using an event-driven architecture with a message broker like Kafka. I'd then implement a service mesh for secure inter-service communication...";
+    let i = 0;
+    if (typingAnswerRef.current && typingAnswerRef.current.innerHTML === "") {
+      const type = () => {
+        if (i < text.length) {
+          if (typingAnswerRef.current) {
+            typingAnswerRef.current.innerHTML += text.charAt(i);
+          }
+          i++;
+          setTimeout(type, 30);
+        } else if (mockupSidebarRef.current) {
+          mockupSidebarRef.current.classList.add("sidebar-visible");
+        }
+      };
+      type();
+    }
+  }
 
   useEffect(() => {
     // Navbar scroll effect
@@ -94,32 +316,11 @@ export default function LandingPage() {
     };
   }, []);
 
-  const startHeroTyping = () => {
-    const text = "To architect a scalable microservices system, I would first focus on decoupling services using an event-driven architecture with a message broker like Kafka. I'd then implement a service mesh for secure inter-service communication...";
-    let i = 0;
-    if (typingAnswerRef.current && typingAnswerRef.current.innerHTML === "") {
-      const type = () => {
-        if (i < text.length) {
-          if (typingAnswerRef.current) {
-            typingAnswerRef.current.innerHTML += text.charAt(i);
-          }
-          i++;
-          setTimeout(type, 30);
-        } else {
-          if (mockupSidebarRef.current) {
-            mockupSidebarRef.current.classList.add("sidebar-visible");
-          }
-        }
-      };
-      type();
-    }
-  };
-
   const handleTabSwitch = (type: "technical" | "behavioral" | "hr") => {
     setActiveDemo(type);
     if (demoAnswerRef.current) {
       demoAnswerRef.current.innerHTML = "";
-      const text = demoData[type].answer;
+      const text = landingData.mockup.demos[type].answer;
       let i = 0;
       const typeText = () => {
         if (i < text.length) {
@@ -145,20 +346,16 @@ export default function LandingPage() {
         <div className="container nav-container">
           <a href="#" className="logo font-heading">
             <Sparkles size={24} />
-            MockMate
+            {landingData.brand.name}
           </a>
           
           <nav className="nav-links">
-            <a href="#features" className="nav-link">Features</a>
-            <a href="#how-it-works" className="nav-link">How It Works</a>
-            <a href="#pricing" className="nav-link">Pricing</a>
-            <a href="#testimonials" className="nav-link">Testimonials</a>
+            {landingData.navigation.links.map((link, idx) => (
+              <a key={idx} href={link.href} className="nav-link">{link.label}</a>
+            ))}
           </nav>
 
-          <div className="nav-actions">
-            <a href="#" className="btn btn-ghost">Sign In</a>
-            <a href="#" className="btn btn-primary">Start Free</a>
-          </div>
+          <LandingNavbarActions />
         </div>
       </header>
 
@@ -166,26 +363,26 @@ export default function LandingPage() {
         <section className="container hero">
           <div className="eyebrow fade-up">
             <Sparkles size={14} />
-            Powered by Gemini AI
+            {landingData.hero.eyebrow}
           </div>
 
           <h1 className="fade-up">
-            Ace Every Interview.<br />
-            <span className="text-gradient">With AI That</span><br />
-            Knows You.
+            {landingData.hero.title.part1}<br />
+            <span className="text-gradient">{landingData.hero.title.gradient}</span><br />
+            {landingData.hero.title.part2}
           </h1>
 
           <p className="fade-up">
-            Personalized mock interviews for any role, any level. Real feedback. Real improvement. Land the job you deserve.
+            {landingData.hero.description}
           </p>
 
           <div className="hero-ctas fade-up">
-            <a href="#" className="btn btn-primary">
-              Start Your Free Interview <ArrowRight size={18} />
-            </a>
-            <a href="#" className="btn btn-secondary">
-              Watch Demo <PlayCircle size={18} />
-            </a>
+            <HeroCTA />
+            {landingData.hero.ctas.map((cta) => (
+              <a key={cta.label} href={cta.href} className={`btn ${cta.primary ? "btn-primary" : "btn-secondary"}`}>
+                {cta.label} {cta.icon}
+              </a>
+            ))}
           </div>
 
           <div className="social-proof fade-up">
@@ -197,7 +394,7 @@ export default function LandingPage() {
               <div className="avatar" style={{ background: "#F59E0B" }}>+</div>
             </div>
             <div className="proof-text">
-              Trusted by 12,000+ candidates
+              {landingData.hero.socialProof.trustedBy}
               <span className="rating">
                 <Star size={12} fill="currentColor" />
                 <Star size={12} fill="currentColor" />
@@ -205,7 +402,7 @@ export default function LandingPage() {
                 <Star size={12} fill="currentColor" />
                 <Star size={12} fill="currentColor" />
               </span>
-              (4.9/5)
+              ({landingData.hero.socialProof.rating})
             </div>
           </div>
 
@@ -213,93 +410,58 @@ export default function LandingPage() {
             <div className="mockup-glow"></div>
             <div className="mockup-card glass">
               <div className="mockup-content">
-                <span className="mockup-label">Ongoing Interview</span>
-                <h3 className="mockup-question">"Explain how you'd architect a scalable microservices system"</h3>
+                <span className="mockup-label">{landingData.mockup.label}</span>
+                <h3 className="mockup-question">&ldquo;{landingData.mockup.question}&rdquo;</h3>
                 <div className="mockup-answer" ref={typingAnswerRef}></div>
               </div>
               <div className="mockup-sidebar glass feedback-panel" ref={mockupSidebarRef}>
-                <span className="mockup-label">AI Feedback</span>
-                <div className="score-badge">8.5/10</div>
-                <div className="feedback-item positive">
-                  <CheckCircle2 size={16} />
-                  <p>Excellent depth on container orchestration and service mesh patterns.</p>
-                </div>
-                <div className="feedback-item negative">
-                  <AlertCircle size={16} />
-                  <p>Consider mentioning circuit breakers for better fault tolerance.</p>
-                </div>
+                <span className="mockup-label">{landingData.mockup.feedback.label}</span>
+                <div className="score-badge">{landingData.mockup.feedback.score}</div>
+                {landingData.mockup.feedback.items.map((item, idx) => (
+                  <div key={idx} className={`feedback-item ${item.type}`}>
+                    {item.type === 'positive' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                    <p>{item.text}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
         <section id="how-it-works" className="container section process-section">
-          <span className="process-label fade-up">The Process</span>
+          <span className="process-label fade-up">{landingData.howItWorks.label}</span>
           <div className="process-grid">
-            <div className="process-card glass fade-up">
-              <div className="step-number">01</div>
-              <Settings size={48} />
-              <h3>Set Your Stage</h3>
-              <p>Choose your target role, industry, and experience level to customize your session.</p>
-            </div>
-            <div className="process-card glass fade-up">
-              <div className="step-number">02</div>
-              <Mic size={48} />
-              <h3>Face the AI</h3>
-              <p>Engage in a live conversation with our Gemini-powered AI that adapts to your answers.</p>
-            </div>
-            <div className="process-card glass fade-up">
-              <div className="step-number">03</div>
-              <TrendingUp size={48} />
-              <h3>Level Up</h3>
-              <p>Receive instant, detailed feedback with scoring and ideal answer suggestions.</p>
-            </div>
+            {landingData.howItWorks.steps.map((step, idx) => (
+              <div key={idx} className="process-card glass fade-up">
+                <div className="step-number">{step.number}</div>
+                {step.icon}
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
+              </div>
+            ))}
           </div>
         </section>
 
         <section id="features" className="container section features-section">
-          <h2 className="fade-up">Engineered for Excellence</h2>
+          <h2 className="fade-up">{landingData.features.title}</h2>
           <div className="bento-grid">
-            <div className="bento-card bento-large glass fade-up">
-              <BrainCircuit size={32} />
-              <div>
-                <h3>AI Question Engine</h3>
-                <p>Gemini AI generates role-specific questions that adapt to your experience level in real-time.</p>
-              </div>
-            </div>
-            <div className="bento-card glass fade-up">
-              <Zap size={32} />
-              <h3>Adaptive Difficulty</h3>
-              <p>Challenges that grow with you.</p>
-            </div>
-            <div className="bento-card glass fade-up">
-              <Volume2 size={32} />
-              <h3>Voice Mode</h3>
-              <p>Natural speech interaction.</p>
-            </div>
-            <div className="bento-card bento-large glass fade-up">
-              <BarChart3 size={32} />
-              <div>
-                <h3>Detailed Feedback</h3>
-                <p>Comprehensive breakdown of your performance across clarity, accuracy, and depth.</p>
-                <div className="meter-container">
-                  <div className="meter-circle">
-                    <div className="meter-progress"></div>
-                    <span className="meter-value">8.7/10</span>
-                  </div>
+            {landingData.features.items.map((feature, idx) => (
+              <div key={idx} className={`bento-card glass fade-up ${feature.large ? 'bento-large' : ''}`}>
+                {feature.icon}
+                <div>
+                  <h3>{feature.title}</h3>
+                  <p>{feature.description}</p>
+                  {feature.showMeter && (
+                    <div className="meter-container">
+                      <div className="meter-circle">
+                        <div className="meter-progress"></div>
+                        <span className="meter-value">{feature.meterValue}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-            <div className="bento-card glass fade-up">
-              <Database size={32} />
-              <h3>500+ Questions</h3>
-              <p>Curated from top companies.</p>
-            </div>
-            <div className="bento-card glass fade-up">
-              <LayoutDashboard size={32} />
-              <h3>Analytics</h3>
-              <p>Track your growth daily.</p>
-            </div>
+            ))}
           </div>
         </section>
 
@@ -307,37 +469,28 @@ export default function LandingPage() {
           <div className="container">
             <span className="process-label fade-up">See It In Action</span>
             <div className="demo-tabs fade-up">
-              <button 
-                className={`tab-btn ${activeDemo === "technical" ? "active" : ""}`} 
-                onClick={() => handleTabSwitch("technical")}
-              >
-                Technical
-              </button>
-              <button 
-                className={`tab-btn ${activeDemo === "behavioral" ? "active" : ""}`} 
-                onClick={() => handleTabSwitch("behavioral")}
-              >
-                Behavioral
-              </button>
-              <button 
-                className={`tab-btn ${activeDemo === "hr" ? "active" : ""}`} 
-                onClick={() => handleTabSwitch("hr")}
-              >
-                HR
-              </button>
+              {demoTabs.map((key) => (
+                <button 
+                  key={key}
+                  className={`tab-btn ${activeDemo === key ? "active" : ""}`} 
+                  onClick={() => handleTabSwitch(key)}
+                >
+                  {landingData.mockup.demos[key].label.split(" ")[0]}
+                </button>
+              ))}
             </div>
             <div className="demo-container fade-up">
               <div className="demo-visual-card glass">
                 <div className="mockup-content">
-                  <span className="mockup-label">{demoData[activeDemo].label}</span>
-                  <h3 className="mockup-question">"{demoData[activeDemo].question}"</h3>
+                  <span className="mockup-label">{landingData.mockup.demos[activeDemo].label}</span>
+                  <h3 className="mockup-question">&ldquo;{landingData.mockup.demos[activeDemo].question}&rdquo;</h3>
                   <div className="mockup-answer" ref={demoAnswerRef}></div>
                 </div>
               </div>
               <div className="demo-info">
                 <div className="feedback-panel sidebar-visible glass" style={{ opacity: 1, transform: "none" }}>
                   <span className="mockup-label">AI Analysis</span>
-                  <div className="score-badge">{demoData[activeDemo].score}</div>
+                  <div className="score-badge">{landingData.mockup.demos[activeDemo].score}</div>
                   <p className="text-muted">Our AI identifies key architectural gaps in milliseconds, providing actionable advice for your next interview.</p>
                 </div>
               </div>
@@ -347,36 +500,22 @@ export default function LandingPage() {
 
         <section className="section stats-section">
           <div className="container stats-grid">
-            <div className="stat-item fade-up">
-              <h2 className="counter">12K+</h2>
-              <p>Interviews Completed</p>
-            </div>
-            <div className="stat-item fade-up">
-              <h2 className="counter">94%</h2>
-              <p>Confidence Boost</p>
-            </div>
-            <div className="stat-item fade-up">
-              <h2 className="counter">8.7</h2>
-              <p>Avg Feedback Score</p>
-            </div>
-            <div className="stat-item fade-up">
-              <h2 className="counter">3x</h2>
-              <p>Faster Prep</p>
-            </div>
+            {landingData.stats.map((stat, idx) => (
+              <div key={idx} className="stat-item fade-up">
+                <h2 className="counter">{stat.value}</h2>
+                <p>{stat.label}</p>
+              </div>
+            ))}
           </div>
         </section>
 
         <section id="testimonials" className="container section">
-          <h2 className="fade-up" style={{ textAlign: "center", marginBottom: "4rem" }}>Real candidates. Real results.</h2>
+          <h2 className="fade-up" style={{ textAlign: "center", marginBottom: "4rem" }}>{landingData.testimonials.title}</h2>
           <div className="testimonials-grid">
-            {[
-              { name: "Josh Doe", role: "Software Engineer → Google", initial: "JD", color: "#6366F1", text: "MockMate's feedback was more detailed than my actual internship feedback at Google. It caught my habit of over-explaining simple concepts." },
-              { name: "Sarah Miller", role: "Product Manager → Stripe", initial: "SM", color: "#22D3EE", text: "I failed 6 interviews before MockMate. Got an offer at Stripe within 3 weeks of using the platform daily." },
-              { name: "Alex Kim", role: "Frontend Dev → Vercel", initial: "AK", color: "#8B5CF6", text: "The adaptive questions actually challenged me. Generic prep tools never did that. It felt like a real conversation with a senior lead." }
-            ].map((t, idx) => (
+            {landingData.testimonials.items.map((t, idx) => (
               <div key={idx} className="testimonial-card glass fade-up">
                 <div className="avatar-box" style={{ background: t.color }}>{t.initial}</div>
-                <p className="testimonial-content">"{t.text}"</p>
+                <p className="testimonial-content">&ldquo;{t.text}&rdquo;</p>
                 <div className="testimonial-author">
                   <div className="author-info">
                     <h4>{t.name}</h4>
@@ -389,7 +528,7 @@ export default function LandingPage() {
         </section>
 
         <section id="pricing" className="container section pricing-section">
-          <h2 className="fade-up">Simple, transparent pricing</h2>
+          <h2 className="fade-up">{landingData.pricing.title}</h2>
           <div className="toggle-container fade-up">
             <span>Monthly</span>
             <div 
@@ -398,58 +537,35 @@ export default function LandingPage() {
             >
               <div className="toggle-slider"></div>
             </div>
-            <span>Annual <span style={{ color: "var(--success-green)", fontSize: "0.75rem" }}>(Save 30%)</span></span>
+            <span>Annual <span style={{ color: "var(--success-green)", fontSize: "0.75rem" }}>({landingData.pricing.annualDiscount})</span></span>
           </div>
           <div className="pricing-grid">
-            <div className="pricing-card glass fade-up">
-              <h3>Free</h3>
-              <div className="price">$0<span>/mo</span></div>
-              <ul className="pricing-features">
-                <li><Check size={18} /> 3 interviews / month</li>
-                <li><Check size={18} /> Basic feedback</li>
-                <li><Check size={18} /> Community access</li>
-              </ul>
-              <a href="#" className="btn btn-secondary" style={{ width: "100%", justifyContent: "center" }}>Get Started</a>
-            </div>
-            <div className="pricing-card glass popular fade-up">
-              <span className="popular-badge">MOST POPULAR</span>
-              <h3>Pro</h3>
-              <div className="price">
-                {billingCycle === "monthly" ? "$19" : "$159"}
-                <span>/{billingCycle === "monthly" ? "mo" : "yr"}</span>
+            {landingData.pricing.plans.map((plan, idx) => (
+              <div key={idx} className={`pricing-card glass fade-up ${plan.popular ? 'popular' : ''}`}>
+                {plan.popular && <span className="popular-badge">MOST POPULAR</span>}
+                <h3>{plan.name}</h3>
+                <div className="price">
+                  {billingCycle === "monthly" ? plan.price.monthly : plan.price.annual}
+                  <span>/{billingCycle === "monthly" ? "mo" : "yr"}</span>
+                </div>
+                <ul className="pricing-features">
+                  {plan.features.map((feature, fIdx) => (
+                    <li key={fIdx}><Check size={18} /> {feature}</li>
+                  ))}
+                </ul>
+                <a href="/dashboard/new" className={`btn ${plan.popular ? 'btn-primary' : 'btn-secondary'}`} style={{ width: "100%", justifyContent: "center" }}>
+                  {plan.cta}
+                </a>
               </div>
-              <ul className="pricing-features">
-                <li><Check size={18} /> Unlimited interviews</li>
-                <li><Check size={18} /> Voice mode</li>
-                <li><Check size={18} /> Resume-based questions</li>
-                <li><Check size={18} /> Full analytics</li>
-              </ul>
-              <a href="#" className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }}>Get Pro</a>
-            </div>
-            <div className="pricing-card glass fade-up">
-              <h3>Team</h3>
-              <div className="price">
-                {billingCycle === "monthly" ? "$49" : "$399"}
-                <span>/{billingCycle === "monthly" ? "mo" : "yr"}</span>
-              </div>
-              <ul className="pricing-features">
-                <li><Check size={18} /> Everything in Pro</li>
-                <li><Check size={18} /> Team dashboard</li>
-                <li><Check size={18} /> Bulk reports</li>
-                <li><Check size={18} /> Custom roles</li>
-              </ul>
-              <a href="#" className="btn btn-secondary" style={{ width: "100%", justifyContent: "center" }}>Contact Sales</a>
-            </div>
+            ))}
           </div>
         </section>
 
         <section className="final-cta">
           <div className="container">
-            <h2 className="fade-up">Your dream job is one interview away.</h2>
-            <p className="fade-up text-muted" style={{ marginBottom: "3rem", fontSize: "1.25rem" }}>Start for free. No credit card required.</p>
-            <a href="#" className="btn btn-primary fade-up" style={{ margin: "0 auto" }}>
-              Begin Your Mock Interview <ArrowRight size={18} />
-            </a>
+            <h2 className="fade-up">{landingData.brand.tagline}</h2>
+            <p className="fade-up text-muted" style={{ marginBottom: "3rem", fontSize: "1.25rem" }}>{landingData.brand.description}</p>
+            <HeroCTA className="fade-up" />
           </div>
         </section>
       </main>
@@ -457,51 +573,56 @@ export default function LandingPage() {
       <footer>
         <div className="container">
           <div className="footer-grid">
-            <div className="footer-logo-side">
+            <div className="footer-brand-section">
               <a href="#" className="logo font-heading">
                 <Sparkles size={24} />
-                MockMate
+                {landingData.brand.name}
               </a>
-              <p>Built for the next generation of top performers.</p>
+              <p className="brand-desc">{landingData.footer.brandDesc}</p>
+              <div className="status-indicator">
+                <div className="status-dot"></div>
+                <span>{landingData.brand.status}</span>
+              </div>
             </div>
-            <div className="footer-col">
-              <h5>Product</h5>
-              <ul>
-                <li><a href="#">Features</a></li>
-                <li><a href="#">How it works</a></li>
-                <li><a href="#">Pricing</a></li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h5>Company</h5>
-              <ul>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Careers</a></li>
-                <li><a href="#">Blog</a></li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h5>Resources</h5>
-              <ul>
-                <li><a href="#">Docs</a></li>
-                <li><a href="#">Help Center</a></li>
-                <li><a href="#">Community</a></li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h5>Legal</h5>
-              <ul>
-                <li><a href="#">Privacy</a></li>
-                <li><a href="#">Terms</a></li>
-              </ul>
-            </div>
+            
+            {landingData.footer.sections.map((section, idx) => (
+              <div key={idx} className="footer-col">
+                <h5>{section.title}</h5>
+                <ul>
+                  {section.links.map((link, lIdx) => (
+                    <li key={lIdx}>
+                      <a href={link.href}>{link.label}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
+
           <div className="footer-bottom">
-            <p>© 2025 MockMate AI. All rights reserved.</p>
-            <div style={{ display: "flex", gap: "2rem" }}>
-              <a href="#">Twitter</a>
-              <a href="#">LinkedIn</a>
-              <a href="#">GitHub</a>
+            <div className="footer-bottom-left">
+              <p>© {new Date().getFullYear()} {landingData.brand.name} AI. All rights reserved.</p>
+              <div className="footer-legal-inline">
+                <a href="#">Privacy</a>
+                <span className="dot-sep"></span>
+                <a href="#">Terms</a>
+                <span className="dot-sep"></span>
+                <a href="#">Cookies</a>
+              </div>
+            </div>
+            
+            <div className="footer-bottom-right">
+              <div className="social-links">
+                {landingData.footer.socials.map((social, sIdx) => (
+                  <a key={sIdx} href={social.href} className="social-icon" aria-label={social.name}>
+                    {social.icon}
+                  </a>
+                ))}
+              </div>
+              <div className="language-selector">
+                <Globe size={16} />
+                <span>English (US)</span>
+              </div>
             </div>
           </div>
         </div>

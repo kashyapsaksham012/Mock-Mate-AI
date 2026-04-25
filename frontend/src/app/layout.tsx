@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import "./landing.css";
 
@@ -13,13 +14,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <head>
-        <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&f[]=cabinet-grotesk@400,500,700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="antialiased">
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className="scroll-smooth">
+        <head>
+          <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&f[]=cabinet-grotesk@400,500,700&display=swap" rel="stylesheet" />
+        </head>
+        <body className="antialiased">
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
