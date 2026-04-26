@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { v2 as cloudinary } from 'cloudinary';
 import { env } from '../../config/env';
 import { db } from '../../config/db';
-import { resumeProfiles } from '../../models/schema';
+import { users, resumeProfiles } from '../../models/schema';
 import { eq } from 'drizzle-orm';
 import { AppError } from '../../utils/errors';
 import {
@@ -46,6 +46,19 @@ const COMMON_SKILLS = [
 
 export class ResumeService {
   static async parseUploadedResume(input: ResumeUploadInput): Promise<ResumeUploadResult> {
+    // ENSURE USER EXISTS (JIT Sync)
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.id, input.userId),
+    });
+
+    if (!existingUser) {
+      await db.insert(users).values({
+        id: input.userId,
+        email: `user_${input.userId}@mockmate.ai`,
+        fullName: 'Dev User',
+      }).onConflictDoNothing();
+    }
+
     const filePath = await this.persistUpload(input);
     const extractedText = await this.extractText(input.buffer, input.mimeType, input.fileName);
     const parsed = await this.parseResumeText(extractedText);
@@ -57,6 +70,7 @@ export class ResumeService {
       filePath,
       source: parsed.__source,
     });
+
 
     return {
       data,

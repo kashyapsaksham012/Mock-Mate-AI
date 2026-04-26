@@ -28,6 +28,7 @@ import { PlanBadge } from "@/components/plan-badge";
 import { appRoutes } from "@/lib/app-routes";
 import { useRouter } from "next/navigation";
 import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
+import { GlobalNavbar } from "@/components/layout/GlobalNavbar";
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -71,20 +72,20 @@ export default function LandingPage() {
     },
     mockup: {
       label: "Ongoing Interview",
-      question: "Explain how you'd architect a scalable microservices system",
+      question: "Walk us through a high-probability setup where you leveraged SMC and ICT methodologies—specifically liquidity grabs and FVGs—to confirm directional bias and secure an OTE.",
       feedback: {
         label: "AI Feedback",
         score: "8.5/10",
         items: [
-          { type: "positive", text: "Excellent depth on container orchestration and service mesh patterns." },
-          { type: "negative", text: "Consider mentioning circuit breakers for better fault tolerance." },
+          { type: "positive", text: "Excellent depth on liquidity sweep identification and multi-timeframe alignment." },
+          { type: "negative", text: "Consider mentioning risk-to-reward parameters for a more complete answer." },
         ]
       },
       demos: {
         technical: {
-          label: "Technical Interview",
-          question: "How do you handle race conditions in a distributed system?",
-          answer: "I would implement distributed locking using a tool like Redis (Redlock) or use optimistic locking with versioning in the database. Additionally, ensuring idempotency in event processing...",
+          label: "Trading Strategy",
+          question: "How do you confirm directional bias and identify high-probability OTEs using SMC methodologies?",
+          answer: "I establish a draw on liquidity using H4/D1 timeframes. Following a liquidity sweep, I look for a Market Structure Shift (MSS) with displacement on the M15. The entry is then optimized within the 62%-79% retracement leg, targeting the next logical liquidity pool.",
           score: "9.2/10"
         },
         behavioral: {
@@ -346,23 +347,7 @@ export default function LandingPage() {
       <div className="bg-noise"></div>
       <div className="cursor-follower" ref={cursorRef}></div>
 
-      <header className={`navbar ${isScrolled ? "scrolled" : ""}`}>
-        <div className="container nav-container">
-          <a href="#" className="logo font-heading">
-            <Sparkles size={24} />
-            {landingData.brand.name}
-          </a>
-          
-          <nav className="nav-links">
-            {landingData.navigation.links.map((link, idx) => (
-              <a key={idx} href={link.href} className="nav-link">{link.label}</a>
-            ))}
-            <PlanBadge />
-          </nav>
-
-          <LandingNavbarActions />
-        </div>
-      </header>
+      <GlobalNavbar isScrolled={isScrolled} />
 
       <main>
         <section className="container hero">

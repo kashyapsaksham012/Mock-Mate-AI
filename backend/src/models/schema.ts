@@ -102,6 +102,7 @@ export const interviewSessions = pgTable('interview_sessions', {
   targetRole: text('target_role').notNull(),
   difficulty: text('difficulty').notNull(),
   questions: jsonb('questions').notNull(), // Array of {id, question, type, hint}
+  status: text('status').notNull().default('active'), // active, completed
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => {
   return {
@@ -109,7 +110,23 @@ export const interviewSessions = pgTable('interview_sessions', {
   };
 });
 
-// Relations definitions (optional, useful for Drizzle relational queries)
+// Interview Answers table
+export const interviewAnswers = pgTable('interview_answers', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sessionId: uuid('session_id').notNull().references(() => interviewSessions.id, { onDelete: 'cascade' }),
+  questionId: integer('question_id').notNull(),
+  answerText: text('answer_text').notNull(),
+  score: integer('score'), // 0-100
+  aiFeedback: text('ai_feedback'),
+  aiTip: text('ai_tip'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => {
+  return {
+    sessionIdx: index('idx_interview_answers_session_id').on(table.sessionId),
+  };
+});
+
+// Relations definitions
 export const usersRelations = relations(users, ({ many }) => ({
   subscriptions: many(subscriptions),
   payments: many(payments),
@@ -118,10 +135,18 @@ export const usersRelations = relations(users, ({ many }) => ({
   interviewSessions: many(interviewSessions),
 }));
 
-export const interviewSessionsRelations = relations(interviewSessions, ({ one }) => ({
+export const interviewSessionsRelations = relations(interviewSessions, ({ one, many }) => ({
   user: one(users, {
     fields: [interviewSessions.userId],
     references: [users.id],
+  }),
+  answers: many(interviewAnswers),
+}));
+
+export const interviewAnswersRelations = relations(interviewAnswers, ({ one }) => ({
+  session: one(interviewSessions, {
+    fields: [interviewAnswers.sessionId],
+    references: [interviewSessions.id],
   }),
 }));
 
@@ -143,3 +168,4 @@ export const resumeProfilesRelations = relations(resumeProfiles, ({ one }) => ({
     references: [users.id],
   }),
 }));
+

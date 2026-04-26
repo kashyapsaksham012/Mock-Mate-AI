@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { User, Target, Brain, Settings, PenTool, Rocket, Save, Plus, X, ChevronRight } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { type ResumeAutofillData } from "@/types/resume";
 import { type InterviewGenerateRequest } from "@/types/interview";
 
@@ -16,7 +17,7 @@ const formConfig = {
 type ManualSetupFormProps = {
   resumeData: ResumeAutofillData;
   hasResumeData: boolean;
-  onStartInterview: (payload: InterviewGenerateRequest) => Promise<void>;
+  onStartInterview: (payload: InterviewGenerateRequest) => Promise<any>;
   isGeneratingInterview: boolean;
 };
 
@@ -26,23 +27,24 @@ export function ManualSetupForm({
   onStartInterview,
   isGeneratingInterview,
 }: ManualSetupFormProps) {
-  const [fullName, setFullName] = useState(() => resumeData.fullName);
-  const [email, setEmail] = useState(() => resumeData.email);
-  const [currentRole, setCurrentRole] = useState(() => resumeData.currentRole);
-  const [experience, setExperience] = useState(() => resumeData.experience);
-  const [desiredRole, setDesiredRole] = useState(() => resumeData.targetRole);
-  const [targetCompanyType, setTargetCompanyType] = useState('');
-  const [primaryDomain, setPrimaryDomain] = useState(() => resumeData.primaryDomain);
-  const [techStack, setTechStack] = useState<string[]>(() => resumeData.skills);
-  const [newSkill, setNewSkill] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState('');
-  const [difficulty, setDifficulty] = useState(() => resumeData.lastDifficulty || 'Medium');
-  const [interviewType, setInterviewType] = useState('Technical');
-  const [duration, setDuration] = useState('');
+  const router = useRouter();
+  const [fullName, setFullName] = useState(() => resumeData.fullName || "");
+  const [email, setEmail] = useState(() => resumeData.email || "");
+  const [currentRole, setCurrentRole] = useState(() => resumeData.currentRole || "");
+  const [experience, setExperience] = useState(() => resumeData.experience || "");
+  const [desiredRole, setDesiredRole] = useState(() => resumeData.targetRole || "");
+  const [targetCompanyType, setTargetCompanyType] = useState("");
+  const [primaryDomain, setPrimaryDomain] = useState(() => resumeData.primaryDomain || "");
+  const [techStack, setTechStack] = useState<string[]>(() => resumeData.skills || []);
+  const [newSkill, setNewSkill] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [difficulty, setDifficulty] = useState(() => resumeData.lastDifficulty || "Medium");
+  const [interviewType, setInterviewType] = useState("Technical");
+  const [duration, setDuration] = useState("");
   const [focusAreas, setFocusAreas] = useState<string[]>([]);
-  const [newFocusArea, setNewFocusArea] = useState('');
+  const [newFocusArea, setNewFocusArea] = useState("");
   const [activeFocus, setActiveFocus] = useState<string[]>([]);
-  const [additionalInstructions, setAdditionalInstructions] = useState('');
+  const [additionalInstructions, setAdditionalInstructions] = useState("");
 
   const toggleFocus = (area: string) => {
     setActiveFocus((prev) =>
@@ -75,21 +77,36 @@ export function ManualSetupForm({
   };
 
   const handleStartInterview = async () => {
-    await onStartInterview({
-      fullName,
-      email,
-      currentRole,
-      experience,
-      skills: techStack,
-      primaryDomain,
-      targetRole: desiredRole,
-      jobLevel: selectedLevel,
-      companyType: targetCompanyType,
-      focusAreas: activeFocus,
-      difficulty,
-      interviewType,
-    });
+    try {
+      const response = await onStartInterview({
+        fullName,
+        email,
+        currentRole,
+        experience,
+        skills: techStack,
+        primaryDomain,
+        targetRole: desiredRole,
+        jobLevel: selectedLevel,
+        companyType: targetCompanyType,
+        focusAreas: activeFocus,
+        difficulty,
+        interviewType,
+        duration,
+      });
+      
+      // Store the full response (questions + sessionId)
+      if (response) {
+        const dataToStore = { ...response, duration: response.duration || duration };
+        sessionStorage.setItem("current_interview_data", JSON.stringify(dataToStore));
+        router.push("/dashboard/interview");
+      } else {
+        throw new Error("No interview data received");
+      }
+    } catch (error) {
+      console.error("Failed to start interview", error);
+    }
   };
+
 
   return (
     <div className="space-y-[60px]">

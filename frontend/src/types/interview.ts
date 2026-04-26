@@ -18,8 +18,11 @@ export type InterviewGenerateRequest = {
   focusAreas?: string[];
   difficulty?: string;
   interviewType?: string;
+  duration?: string;
 };
 
 export type InterviewGenerateResponse = {
   questions: InterviewQuestion[];
+  sessionId?: string;
+  duration?: string;
 };

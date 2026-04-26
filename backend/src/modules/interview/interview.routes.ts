@@ -3,7 +3,7 @@ import { requireAuth, ClerkAuthRequest } from '../../middleware/auth';
 import { subscriptionGuard } from '../../middleware/subscriptionGuard';
 import { AppError } from '../../utils/errors';
 import { InterviewService } from './interview.service';
-import { interviewGenerateRequestSchema } from './interview.types';
+import { interviewGenerateRequestSchema, interviewAnswerRequestSchema } from './interview.types';
 
 const router = Router();
 
@@ -27,5 +27,22 @@ router.post('/generate', requireAuth, subscriptionGuard, async (req: Request, re
     next(error);
   }
 });
+
+router.post('/answer', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as ClerkAuthRequest;
+    const userId = authReq.auth?.userId;
+    if (!userId) throw new AppError('Unauthorized', 401);
+
+    const parse = interviewAnswerRequestSchema.safeParse(req.body);
+    if (!parse.success) throw new AppError('Invalid answer payload', 400);
+
+    const result = await InterviewService.submitAnswer(userId, parse.data);
+    res.json({ data: result });
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 export { router as interviewRoutes };

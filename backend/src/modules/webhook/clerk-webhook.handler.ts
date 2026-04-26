@@ -39,11 +39,18 @@ export class ClerkWebhookHandler {
       return;
     }
 
-    // Insert user into our DB so billing can attach to it.
+    // Upsert for idempotency because webhook delivery may retry.
     await db.insert(users).values({
       id: data.id,
       email: primaryEmail,
       fullName: fullName,
+    }).onConflictDoUpdate({
+      target: users.id,
+      set: {
+        email: primaryEmail,
+        fullName: fullName,
+        updatedAt: new Date(),
+      },
     });
     console.log(`[Clerk Webhook] Successfully synced user ${data.id} into database.`);
   }

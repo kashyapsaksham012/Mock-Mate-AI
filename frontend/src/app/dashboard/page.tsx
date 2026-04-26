@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardNavbar } from "@/components/dashboard/dashboard-navbar";
+import { GlobalNavbar } from "@/components/layout/GlobalNavbar";
 import { SuccessOverlay } from "@/components/billing/SuccessOverlay";
 import { InterviewSetupHeader } from "@/components/dashboard/interview-setup/InterviewSetupHeader";
 import { ResumeUploadSection } from "@/components/dashboard/interview-setup/ResumeUploadSection";
@@ -105,17 +105,21 @@ function DashboardContent() {
       const token = await getToken();
       const generated = await generateInterview(payload, token);
       
-      // Store questions for the session and navigate
-      sessionStorage.setItem("current_interview_questions", JSON.stringify(generated.questions));
-      router.push(appRoutes.interview);
-      
+      if (generated) {
+        return generated;
+      } else {
+        throw new Error("No interview data generated");
+      }
     } catch (generationError) {
       setQuestions([]);
-      setInterviewError(generationError instanceof Error ? generationError.message : "Failed to generate interview questions");
+      const message = generationError instanceof Error ? generationError.message : "Failed to generate interview questions";
+      setInterviewError(message);
+      throw new Error(message); // Re-throw to allow component-level handling
     } finally {
       setIsGeneratingInterview(false);
     }
   };
+
 
   if (isLoading && !sessionId) {
     return (
@@ -132,7 +136,11 @@ function DashboardContent() {
       animate="visible"
       className="premium-container flex flex-col items-center w-full"
     >
-      <motion.div variants={itemVariants} className="section-hero w-full flex justify-center">
+      <motion.div 
+        variants={itemVariants} 
+        className="section-hero w-full flex justify-center"
+        style={{ paddingTop: '280px' }}
+      >
         <InterviewSetupHeader />
       </motion.div>
 
@@ -185,7 +193,7 @@ export default function DashboardPage() {
       <div className="bg-aurora" />
       <div className="bg-noise-overlay" />
 
-      <DashboardNavbar />
+      <GlobalNavbar />
 
       {/* Main Content Area */}
       <section className="relative z-10 pb-20 flex justify-center w-full">

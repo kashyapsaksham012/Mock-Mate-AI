@@ -17,9 +17,9 @@ const upload = multer({
  */
 router.post(
   '/upload',
-  upload.single('file'), 
   requireAuth,
   subscriptionGuard,
+  upload.single('file'), 
   async (req, res, next) => {
     try {
       const authReq = req as ClerkAuthRequest;

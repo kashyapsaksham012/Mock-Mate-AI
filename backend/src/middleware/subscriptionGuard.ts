@@ -8,6 +8,8 @@ import { ForbiddenError } from '../utils/errors';
 export const subscriptionGuard = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const clerkReq = req as unknown as ClerkAuthRequest;
+
+
     const userId = clerkReq.auth?.userId;
     if (!userId) {
       return next(new ForbiddenError('User not authenticated'));

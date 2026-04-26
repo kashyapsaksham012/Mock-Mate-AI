@@ -5,26 +5,36 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { type InterviewQuestion } from "@/types/interview";
 import { InterviewSession } from "@/components/dashboard/interview/InterviewSession";
-import { DashboardNavbar } from "@/components/dashboard/dashboard-navbar";
+import { GlobalNavbar } from "@/components/layout/GlobalNavbar";
+import { 
+  Bell, 
+  Settings, 
+  XCircle
+} from "lucide-react";
+import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
 
 export default function InterviewPage() {
   const router = useRouter();
-  const [questions, setQuestions] = useState<InterviewQuestion[] | null>(null);
+  const [sessionData, setSessionData] = useState<{ sessionId: string; questions: InterviewQuestion[]; duration?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Attempt to load questions from sessionStorage
-    const stored = sessionStorage.getItem("current_interview_questions");
-    if (stored) {
+    const stored = sessionStorage.getItem("current_interview_data");
+    if (stored && stored !== "undefined") {
       try {
-        const parsed = JSON.parse(stored) as InterviewQuestion[];
-        setQuestions(parsed);
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.questions) {
+          setSessionData(parsed);
+        } else {
+          throw new Error("Invalid interview data structure");
+        }
       } catch (e) {
-        console.error("Failed to parse stored questions", e);
+        console.error("Failed to parse stored interview data", e);
+        sessionStorage.removeItem("current_interview_data"); // Clear bad data
         router.replace("/dashboard");
       }
     } else {
-      // No questions found, redirect back
       router.replace("/dashboard");
     }
     setIsLoading(false);
@@ -32,26 +42,41 @@ export default function InterviewPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="w-10 h-10 border-2 border-accent-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center min-h-screen bg-[#080C14]">
+        <div className="w-12 h-12 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  if (!questions) return null;
+  if (!sessionData) return null;
 
   return (
-    <main className="min-h-screen relative overflow-x-hidden landing-wrapper">
-      <div className="bg-aurora" />
-      <div className="bg-noise-overlay" />
-      
-      <DashboardNavbar />
+    <div className="min-h-screen bg-[#080C14] flex flex-col font-sans antialiased selection:bg-violet-500/30">
+      {/* Background System */}
+      <div className="bg-mesh opacity-50"></div>
+      <div className="bg-grid opacity-20"></div>
+      <div className="bg-noise"></div>
 
-      <section className="relative z-10 pt-20 pb-20 flex justify-center w-full px-4">
-        <div className="w-full max-w-[1200px]">
-          <InterviewSession questions={questions} />
+      {/* World-Class Global Navbar */}
+      <GlobalNavbar 
+        links={[
+          { label: 'Exit Session', href: '/dashboard' },
+        ]}
+      />
+
+      {/* Main Immersive Stage */}
+      <main 
+        className="flex-grow pb-12 px-8 flex flex-col relative z-10"
+        style={{ paddingTop: '180px' }}
+      >
+        <div className="max-w-[1400px] mx-auto w-full h-full flex flex-col">
+          <InterviewSession 
+            questions={sessionData.questions} 
+            sessionId={sessionData.sessionId} 
+            duration={sessionData.duration}
+          />
         </div>
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }

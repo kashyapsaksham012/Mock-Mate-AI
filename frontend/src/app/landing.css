@@ -745,9 +745,13 @@ button {
 }
 
 .mockup-question {
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
-    line-height: 1.4;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.7;
+    margin-bottom: 1.25rem;
+    color: var(--text-main);
+    opacity: 0.9;
 }
 
 .mockup-answer {
