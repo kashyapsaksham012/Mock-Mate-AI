@@ -15,7 +15,13 @@ import { AppError } from './utils/errors';
 const app = express();
 
 // Global Middlewares
-app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
+app.use(cors({ 
+  origin: [
+    'https://mock-mate-ai-alpha.vercel.app',
+    env.FRONTEND_URL
+  ], 
+  credentials: true 
+}));
 
 // API Routes
 // Note: Resume upload is registered before express.json to prevent stream interference
