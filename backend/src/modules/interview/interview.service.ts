@@ -353,8 +353,11 @@ export class InterviewService {
   }
 
   private static async generateWithGemini(input: any) {
+    const isBehavioral = input.interviewType?.toLowerCase() === 'behavioral';
+    const persona = isBehavioral ? 'behavioral and situational' : 'technical';
+    
     const prompt = [
-      'You are a technical interviewer. Generate 8 interview questions for:',
+      `You are a ${persona} interviewer. Generate 8 ${input.interviewType || 'technical'} interview questions for:`,
       `- Role: ${input.targetRole}`,
       `- Level: ${input.jobLevel}`,
       `- Skills: ${input.skills.join(', ') || 'N/A'}`,
@@ -362,6 +365,10 @@ export class InterviewService {
       `- Company type: ${input.companyType}`,
       `- Focus areas: ${input.focusAreas.join(', ') || 'N/A'}`,
       `- Difficulty: ${input.difficulty}`,
+      '',
+      isBehavioral 
+        ? 'Focus on situational, behavioral, and cultural fit questions (e.g., STAR method) relevant to this role and industry. Ensure questions help evaluate soft skills, leadership, and conflict resolution.'
+        : 'Focus on core technical concepts, problem-solving, and architecture relevant to the listed skills and role.',
       '',
       'Return ONLY JSON: { "questions": [{ "id": 1, "question": "...", "type": "technical|behavioral", "hint": "..." }] }',
     ].join('\n');
@@ -373,7 +380,9 @@ export class InterviewService {
     skills: string[];
     focusAreas: string[];
     difficulty: string;
+    interviewType?: string;
   }) {
+    const isBehavioral = input.interviewType?.toLowerCase() === 'behavioral';
     const baseTopics = this.uniqueStrings([
       ...input.skills,
       ...input.focusAreas,
@@ -381,15 +390,19 @@ export class InterviewService {
     ]).slice(0, 8);
 
     const questions = Array.from({ length: 8 }).map((_, index) => {
-      const topic = baseTopics[index] || 'problem solving';
-      const technical = index < 6;
+      const topic = baseTopics[index] || 'professional growth';
+      
+      // If behavioral, all questions are behavioral. If technical, most are technical.
+      const type = isBehavioral ? 'behavioral' : (index < 6 ? 'technical' : 'behavioral');
+      const isTechnical = type === 'technical';
+
       return {
         id: index + 1,
-        question: technical
+        question: isTechnical
           ? `Explain how you would approach ${topic} for a ${input.targetRole} role.`
           : `Describe a time you handled a difficult situation related to ${topic}.`,
-        type: technical ? 'technical' as const : 'behavioral' as const,
-        hint: technical
+        type: type as 'technical' | 'behavioral',
+        hint: isTechnical
           ? `Discuss trade-offs, constraints, and testing depth at ${input.difficulty} difficulty.`
           : 'Use a structured STAR-style response with measurable outcomes.',
       };
