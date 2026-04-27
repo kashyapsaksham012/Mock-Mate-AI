@@ -55,7 +55,6 @@ export function ResumeUploadSection({ onResumeParsed, onResumeCleared }: ResumeU
       });
       onResumeParsed(result.data);
       toast.success("Resume Intelligence Synchronized", {
-        icon: "✨",
         style: { borderRadius: '16px' }
       });
     } catch (uploadError: any) {
@@ -76,7 +75,6 @@ export function ResumeUploadSection({ onResumeParsed, onResumeCleared }: ResumeU
     setError(null);
     onResumeCleared();
     toast.info("Resume Data Cleared", {
-      icon: "🧹",
       style: { borderRadius: '16px' }
     });
   };

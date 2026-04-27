@@ -173,7 +173,6 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
       }
 
       toast.success(`Response ${currentIndex + 1} synchronized`, {
-        icon: "⚡",
         style: { borderRadius: '16px' }
       });
 

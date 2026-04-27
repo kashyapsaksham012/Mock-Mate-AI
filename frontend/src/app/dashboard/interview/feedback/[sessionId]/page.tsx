@@ -44,7 +44,6 @@ export default function FeedbackPage({ params }: { params: Promise<{ sessionId: 
         const data = await evaluateInterview(sessionId, token);
         setFeedback(data);
         toast.success("AI Evaluation Complete", {
-          icon: "🧠",
           style: { borderRadius: '16px' }
         });
       } catch (err: any) {

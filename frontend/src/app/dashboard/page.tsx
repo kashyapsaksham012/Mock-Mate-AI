@@ -108,7 +108,6 @@ function DashboardContent() {
       
       if (generated) {
         toast.success("Interview Session Initialized", {
-          icon: "🚀",
           style: { borderRadius: '16px' }
         });
         return generated;
