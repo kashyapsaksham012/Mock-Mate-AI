@@ -51,25 +51,26 @@ export default function InterviewPage() {
   if (!sessionData) return null;
 
   return (
-    <div className="min-h-screen bg-[#080C14] flex flex-col font-sans antialiased selection:bg-violet-500/30">
+    <div className="min-h-screen bg-[#080C14] flex flex-col items-center font-sans antialiased selection:bg-violet-500/30 w-full landing-wrapper">
       {/* Background System */}
-      <div className="bg-mesh opacity-50"></div>
-      <div className="bg-grid opacity-20"></div>
+      <div className="bg-mesh"></div>
+      <div className="bg-grid"></div>
       <div className="bg-noise"></div>
 
       {/* World-Class Global Navbar */}
-      <GlobalNavbar 
-        links={[
-          { label: 'Exit Session', href: '/dashboard' },
-        ]}
-      />
+      <div className="w-full flex justify-center">
+        <GlobalNavbar 
+          links={[
+            { label: 'Exit Session', href: '/dashboard' },
+          ]}
+        />
+      </div>
 
       {/* Main Immersive Stage */}
       <main 
-        className="flex-grow pb-12 px-8 flex flex-col relative z-10"
-        style={{ paddingTop: '180px' }}
+        className="flex-grow pt-after-nav pb-12 px-8 flex flex-col items-center relative z-10 w-full"
       >
-        <div className="max-w-[1400px] mx-auto w-full h-full flex flex-col">
+        <div className="max-w-[1400px] w-full h-full flex flex-col font-heading">
           <InterviewSession 
             questions={sessionData.questions} 
             sessionId={sessionData.sessionId} 

@@ -44,5 +44,21 @@ router.post('/answer', requireAuth, async (req: Request, res: Response, next: Ne
   }
 });
 
+router.post('/evaluate', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as ClerkAuthRequest;
+    const userId = authReq.auth?.userId;
+    if (!userId) throw new AppError('Unauthorized', 401);
+
+    const { sessionId } = req.body;
+    if (!sessionId) throw new AppError('Missing sessionId', 400);
+
+    const result = await InterviewService.evaluateSession(userId, sessionId);
+    res.json({ data: result });
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 export { router as interviewRoutes };

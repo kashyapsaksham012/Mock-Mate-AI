@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, FileText, CheckCircle2, Trash2, Zap } from "lucide-react";
 import { useState, type ChangeEvent } from "react";
+import { toast } from "react-toastify";
 import { uploadResume } from "@/lib/resume-autofill";
 import { type ResumeAutofillData } from "@/types/resume";
 
@@ -53,9 +54,17 @@ export function ResumeUploadSection({ onResumeParsed, onResumeCleared }: ResumeU
         size: (selectedFile.size / (1024 * 1024)).toFixed(1) + ' MB',
       });
       onResumeParsed(result.data);
-    } catch (uploadError) {
+      toast.success("Resume Intelligence Synchronized", {
+        icon: "✨",
+        style: { borderRadius: '16px' }
+      });
+    } catch (uploadError: any) {
       setFile(null);
-      setError(uploadError instanceof Error ? uploadError.message : 'Resume upload failed');
+      const msg = uploadError instanceof Error ? uploadError.message : 'Resume upload failed';
+      setError(msg);
+      toast.error(msg, {
+        style: { borderRadius: '16px' }
+      });
     } finally {
       setIsUploading(false);
       input.value = '';
@@ -66,6 +75,10 @@ export function ResumeUploadSection({ onResumeParsed, onResumeCleared }: ResumeU
     setFile(null);
     setError(null);
     onResumeCleared();
+    toast.info("Resume Data Cleared", {
+      icon: "🧹",
+      style: { borderRadius: '16px' }
+    });
   };
 
   return (

@@ -12,6 +12,7 @@ import { generateInterview } from "@/lib/interview";
 import { fetchResumeProfile } from "@/lib/resume-autofill";
 import { type InterviewGenerateRequest, type InterviewQuestion } from "@/types/interview";
 import { emptyResumeAutofillData, type ResumeAutofillData } from "@/types/resume";
+import { toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
@@ -106,6 +107,10 @@ function DashboardContent() {
       const generated = await generateInterview(payload, token);
       
       if (generated) {
+        toast.success("Interview Session Initialized", {
+          icon: "🚀",
+          style: { borderRadius: '16px' }
+        });
         return generated;
       } else {
         throw new Error("No interview data generated");
@@ -114,6 +119,9 @@ function DashboardContent() {
       setQuestions([]);
       const message = generationError instanceof Error ? generationError.message : "Failed to generate interview questions";
       setInterviewError(message);
+      toast.error(message, {
+        style: { borderRadius: '16px' }
+      });
       throw new Error(message); // Re-throw to allow component-level handling
     } finally {
       setIsGeneratingInterview(false);
@@ -138,8 +146,7 @@ function DashboardContent() {
     >
       <motion.div 
         variants={itemVariants} 
-        className="section-hero w-full flex justify-center"
-        style={{ paddingTop: '280px' }}
+        className="section-hero w-full flex justify-center pt-after-nav"
       >
         <InterviewSetupHeader />
       </motion.div>
@@ -188,15 +195,18 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <main className="min-h-screen relative overflow-x-hidden landing-wrapper">
+    <main className="min-h-screen relative overflow-x-hidden landing-wrapper w-full flex flex-col items-center">
       {/* High-End Brand Background */}
-      <div className="bg-aurora" />
-      <div className="bg-noise-overlay" />
+      <div className="bg-mesh" />
+      <div className="bg-grid" />
+      <div className="bg-noise" />
 
-      <GlobalNavbar />
+      <div className="w-full flex justify-center">
+        <GlobalNavbar />
+      </div>
 
       {/* Main Content Area */}
-      <section className="relative z-10 pb-20 flex justify-center w-full">
+      <section className="relative z-10 pb-20 flex flex-col items-center w-full">
         <Suspense fallback={
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="w-10 h-10 border-2 border-accent-primary border-t-transparent rounded-full animate-spin"></div>

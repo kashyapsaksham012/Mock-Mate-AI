@@ -13,8 +13,8 @@ const envSchema = z.object({
   
   STRIPE_SECRET_KEY: z.string({ message: 'STRIPE_SECRET_KEY is required' }),
   STRIPE_WEBHOOK_SECRET: z.string({ message: 'STRIPE_WEBHOOK_SECRET is required' }),
-  STRIPE_YEARLY_PRODUCT_ID: z.string({ message: 'STRIPE_YEARLY_PRODUCT_ID is required' }),
-  STRIPE_MONTHLY_PRODUCT_ID: z.string({ message: 'STRIPE_MONTHLY_PRODUCT_ID is required' }),
+  STRIPE_YEARLY_PRODUCT_ID: z.string().optional(),
+  STRIPE_MONTHLY_PRODUCT_ID: z.string().optional(),
   
   CLERK_SECRET_KEY: z.string({ message: 'CLERK_SECRET_KEY is required' }),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().optional(),
@@ -22,7 +22,7 @@ const envSchema = z.object({
   
   FRONTEND_URL: z.string().default('http://localhost:3000'),
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
+  GEMINI_MODEL: z.string().default('gemini-1.5-pro'),
   RESUME_UPLOAD_DIR: z.string().default('uploads/resumes'),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),

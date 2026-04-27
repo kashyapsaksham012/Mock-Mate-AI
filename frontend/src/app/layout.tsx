@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import "./landing.css";
 
@@ -22,6 +24,20 @@ export default function RootLayout({
         </head>
         <body className="antialiased">
           {children}
+          <ToastContainer 
+            position="bottom-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+            toastClassName="!bg-[#0D121F] !border !border-white/10 !rounded-2xl !backdrop-blur-xl !shadow-2xl"
+            progressClassName="!bg-gradient-to-r !from-violet-500 !to-fuchsia-500"
+          />
         </body>
       </html>
     </ClerkProvider>

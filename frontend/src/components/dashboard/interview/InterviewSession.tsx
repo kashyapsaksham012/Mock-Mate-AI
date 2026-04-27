@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import { type InterviewQuestion } from "@/types/interview";
 import { Trophy, Home, Send, Zap, Mic, VideoOff, Timer, ChevronRight, Lightbulb, Sparkles } from "lucide-react";
@@ -21,6 +23,7 @@ interface AnswerFeedback {
 }
 
 export function InterviewSession({ questions, sessionId, duration }: InterviewSessionProps) {
+  const router = useRouter();
   const { getToken } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [response, setResponse] = useState("");
@@ -38,9 +41,7 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
   const [isSpeechRecognitionSupported, setIsSpeechRecognitionSupported] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
-  const [status, setStatus] = useState<'interviewing' | 'feedback' | 'completed'>('interviewing');
-  const [allFeedbacks, setAllFeedbacks] = useState<(AnswerFeedback & { question: string, answer: string })[]>([]);
+  const [status, setStatus] = useState<'interviewing' | 'completed'>('interviewing');
 
   const recognitionRef = useRef<any>(null);
   const speechPrefixRef = useRef("");
@@ -167,19 +168,26 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
         })
       });
 
-      const data = await res.json();
-      if (data.data) {
-        const newFeedback = {
-          ...data.data,
-          question: currentQuestion.question,
-          answer: response
-        };
-        setFeedback(data.data);
-        setAllFeedbacks(prev => [...prev, newFeedback]);
-        setStatus('feedback');
+      if (!res.ok) {
+        throw new Error("Failed to save response");
       }
-    } catch (error) {
+
+      toast.success(`Response ${currentIndex + 1} synchronized`, {
+        icon: "⚡",
+        style: { borderRadius: '16px' }
+      });
+
+      // Move to next or complete
+      if (currentIndex < questions.length - 1) {
+        handleNext();
+      } else {
+        router.push(`/dashboard/interview/feedback/${sessionId}`);
+      }
+    } catch (error: any) {
       console.error("Failed to submit answer", error);
+      toast.error(error.message || "Network Error: Sync Failed", {
+        style: { borderRadius: '16px' }
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -190,16 +198,10 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
       recognitionRef.current?.stop();
     }
 
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setResponse("");
-      speechPrefixRef.current = '';
-      speechCommittedRef.current = '';
-      setFeedback(null);
-      setStatus('interviewing');
-    } else {
-      setStatus('completed');
-    }
+    setCurrentIndex(currentIndex + 1);
+    setResponse("");
+    speechPrefixRef.current = '';
+    speechCommittedRef.current = '';
   };
 
   const formatTime = (seconds: number) => {
@@ -209,108 +211,10 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
   };
 
   if (status === 'completed') {
-    const avgScore = Math.round(allFeedbacks.length > 0 ? allFeedbacks.reduce((acc, curr) => acc + curr.score, 0) / allFeedbacks.length : 0);
-    
     return (
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col gap-12 w-full pb-20"
-      >
-        <div className="premium-card p-16 flex flex-col items-center text-center space-y-10 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1.5 primary-gradient"></div>
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-violet-500/10 rounded-full blur-[100px]"></div>
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px]"></div>
-
-          <div className="w-28 h-28 rounded-3xl bg-violet-500/10 flex items-center justify-center relative group">
-            <Trophy className="w-14 h-14 text-violet-400 group-hover:scale-110 transition-transform duration-500" />
-            <motion.div 
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
-              className="absolute inset-0 rounded-3xl border-2 border-dashed border-violet-500/30"
-            />
-          </div>
-          
-          <div className="space-y-4 relative z-10">
-            <h1 className="text-6xl font-bold tracking-tighter text-white">INTERVIEW COMPLETE</h1>
-            <p className="text-white/40 text-xl max-w-2xl mx-auto font-medium">
-              Exceptional work! You've navigated through the complex simulation. Review your AI-powered performance report below.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl mt-8 relative z-10">
-            <div className="bg-white/[0.03] border border-white/5 p-10 rounded-[32px] backdrop-blur-md">
-              <div className="text-5xl font-bold text-white mb-2">{avgScore}%</div>
-              <div className="text-[10px] uppercase tracking-[0.4em] text-violet-400 font-black">Overall Score</div>
-            </div>
-            <div className="bg-white/[0.03] border border-white/5 p-10 rounded-[32px] backdrop-blur-md">
-              <div className="text-5xl font-bold text-white mb-2">{questions.length}</div>
-              <div className="text-[10px] uppercase tracking-[0.4em] text-violet-400 font-black">Modules Passed</div>
-            </div>
-            <div className="bg-white/[0.03] border border-white/5 p-10 rounded-[32px] backdrop-blur-md">
-              <div className="text-5xl font-bold text-white mb-2">{formatTime(1800 - timeLeft)}</div>
-              <div className="text-[10px] uppercase tracking-[0.4em] text-violet-400 font-black">Total Runtime</div>
-            </div>
-          </div>
-
-          <div className="flex gap-6 pt-12 relative z-10">
-            <Link href="/dashboard" className="btn-premium-primary px-16 h-18 flex items-center gap-4 text-lg">
-              <Home className="w-6 h-6" />
-              BACK TO COMMAND CENTER
-            </Link>
-          </div>
-        </div>
-
-        <div className="space-y-10">
-          <h2 className="text-3xl font-bold text-white uppercase tracking-tight flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-              <Sparkles className="text-violet-400 w-5 h-5" />
-            </div>
-            Performance Breakdown
-          </h2>
-          <div className="grid grid-cols-1 gap-6">
-            {allFeedbacks.map((f, i) => (
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                key={i} 
-                className="premium-card p-10 border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
-              >
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 mb-8 pb-8 border-b border-white/5">
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em]">Question {i + 1}</span>
-                    <h3 className="text-2xl font-bold text-white tracking-tight">{f.question}</h3>
-                  </div>
-                  <div className={`px-8 py-4 rounded-2xl font-black text-3xl border shadow-2xl ${
-                    f.score > 80 ? 'text-emerald-400 border-emerald-400/20 bg-emerald-400/5' : 
-                    f.score > 50 ? 'text-amber-400 border-amber-400/20 bg-amber-400/5' : 
-                    'text-red-400 border-red-400/20 bg-red-400/5'
-                  }`}>
-                    {f.score}
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Transcript</label>
-                    <p className="text-white/60 italic text-lg leading-relaxed">"{f.answer}"</p>
-                  </div>
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">AI Evaluation</label>
-                      <p className="text-white/90 text-lg leading-relaxed font-medium">{f.aiFeedback}</p>
-                    </div>
-                    <div className="bg-violet-500/5 border border-violet-500/10 p-6 rounded-2xl flex items-start gap-4">
-                      <Lightbulb className="w-6 h-6 text-violet-400 shrink-0 mt-1" />
-                      <p className="text-violet-200/80 text-sm font-medium leading-relaxed">{f.aiTip}</p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
+      <div className="flex items-center justify-center min-h-[500px]">
+        <div className="w-12 h-12 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
+      </div>
     );
   }
 
@@ -320,7 +224,7 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 flex-grow">
         {/* Left Wing: AI Interviewer */}
         <div className="lg:col-span-5 flex flex-col gap-6">
-          <div className="premium-card flex-grow relative overflow-hidden bg-[#02040A] min-h-[500px] shadow-[0_0_100px_-20px_rgba(99,102,241,0.2)] border-white/5">
+          <div className="premium-card flex-grow relative overflow-hidden bg-black/20 min-h-[500px] shadow-[0_0_100px_-20px_rgba(99,102,241,0.2)] border-white/5">
             <div className="w-full h-full relative group">
               {isCameraEnabled ? (
                 <Webcam
@@ -342,7 +246,7 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
                 </div>
               )}
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#02040A] via-transparent to-transparent opacity-60"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
 
             {/* Status Overlays */}
             <div className="absolute top-8 left-8 flex flex-col gap-3">
@@ -377,21 +281,20 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
         {/* Right Wing: Question & Response */}
         <div className="lg:col-span-7 flex flex-col gap-10">
           <AnimatePresence mode="wait">
-            {status === 'interviewing' ? (
-              <motion.div 
-                key="q-area"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col gap-10 h-full"
-              >
+            <motion.div 
+              key={currentIndex}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="flex flex-col gap-10 h-full"
+            >
                 <div className="premium-card p-14 flex flex-col justify-center relative overflow-hidden min-h-[300px]">
                   <div className="absolute -top-24 -left-24 w-64 h-64 bg-violet-500/5 rounded-full blur-[80px]"></div>
                   <div className="relative z-10 space-y-8">
                     <div className="flex justify-between items-center">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em]">Question {currentIndex + 1} / {questions.length}</span>
-                        <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">{currentQuestion.type}</span>
+                        <span className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] font-heading">Question {currentIndex + 1} / {questions.length}</span>
+                        <span className="text-[9px] font-black text-white/20 uppercase tracking-widest font-heading">{currentQuestion.type}</span>
                       </div>
                       
                       <div className={`min-w-[210px] h-18 rounded-[24px] flex items-center px-6 gap-5 shadow-[0_0_80px_-10px_rgba(99,102,241,0.15)] transition-all duration-1000 border backdrop-blur-[30px] relative overflow-hidden group/timer ${
@@ -407,7 +310,7 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
                         </div>
 
                         <div className="flex flex-col justify-center whitespace-nowrap relative z-10">
-                          <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em] mb-0.5 leading-none">Session Clock</span>
+                          <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em] mb-0.5 leading-none font-heading">Session Clock</span>
                           <span className={`text-2xl font-mono font-black tracking-tight transition-colors duration-500 leading-none ${timeLeft < 300 ? 'text-red-500' : 'text-white'}`}>
                             {formatTime(timeLeft)}
                           </span>
@@ -517,7 +420,7 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
                       <button 
                         onClick={handleSubmit}
                         disabled={!response.trim() || isSubmitting || isRecording}
-                        className="group relative flex items-center justify-between w-[280px] px-8 py-5 rounded-[24px] bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-700 hover:from-indigo-500 hover:via-violet-500 hover:to-fuchsia-600 disabled:opacity-20 disabled:grayscale transition-all duration-700 shadow-[0_30px_100px_-20px_rgba(99,102,241,0.6)] border-t border-white/30 overflow-hidden active:scale-95 text-left"
+                        className="group relative flex items-center justify-between w-[280px] px-8 py-5 rounded-[24px] bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-700 hover:from-indigo-500 hover:via-violet-500 hover:to-fuchsia-600 disabled:opacity-20 disabled:grayscale transition-all duration-700 shadow-[0_30px_100px_-20px_rgba(99,102,241,0.6)] border-t border-white/30 overflow-hidden active:scale-95 text-left font-heading"
                       >
                         <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                         
@@ -540,73 +443,9 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
                   </div>
                 </div>
               </motion.div>
-            ) : (
-              <motion.div 
-                key="feedback-area"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.02 }}
-                className="flex flex-col gap-10 h-full justify-center py-10"
-              >
-                <div className="premium-card p-20 border-violet-500/20 relative overflow-hidden rounded-[64px]">
-                   <div className="absolute top-0 left-0 w-full h-3 primary-gradient opacity-60"></div>
-                   <div className="flex flex-col gap-16 items-center text-center">
-                      <div className="flex flex-col items-center gap-8">
-                        <div className="w-48 h-48 rounded-[60px] primary-gradient flex flex-col items-center justify-center shadow-[0_30px_80px_-10px_rgba(99,102,241,0.6)]">
-                           <span className="text-7xl font-black text-white tracking-tighter leading-none">{feedback?.score}</span>
-                           <span className="text-[11px] font-black text-white/60 uppercase tracking-[0.5em] mt-3">ACCURACY</span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                           {[1,2,3,4,5].map(s => (
-                             <motion.div 
-                              key={s} 
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: s * 0.1 }}
-                              className={`w-3 h-3 rounded-full ${s <= (feedback?.score || 0)/20 ? 'bg-violet-400 shadow-[0_0_15px_rgba(139,92,246,0.6)]' : 'bg-white/10'}`} 
-                             />
-                           ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-12 w-full">
-                         <div className="space-y-6">
-                            <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.6em] flex items-center justify-center gap-6">
-                              <div className="w-16 h-px bg-white/5"></div>
-                              INTELLIGENT EVALUATION
-                              <div className="w-16 h-px bg-white/5"></div>
-                            </h3>
-                            <p className="text-white leading-[1.35] text-3xl font-bold px-6 tracking-tight">
-                              "{feedback?.aiFeedback}"
-                            </p>
-                         </div>
-
-                         <div className="p-10 rounded-[40px] bg-white/[0.02] border border-white/5 space-y-5 relative group transition-all duration-700 hover:bg-white/[0.04]">
-                            <div className="absolute inset-0 bg-violet-500/[0.03] rounded-[40px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <h4 className="text-[11px] font-black text-violet-400 uppercase tracking-[0.5em] flex items-center justify-center gap-4">
-                              <Zap className="w-5 h-5 fill-violet-400" />
-                              GROWTH ARCHITECTURE
-                            </h4>
-                            <p className="text-white/90 font-bold text-xl leading-relaxed relative z-10">
-                              {feedback?.aiTip}
-                            </p>
-                         </div>
-                      </div>
-
-                      <button 
-                        onClick={handleNext}
-                        className="btn-premium-primary w-full h-24 text-2xl shadow-[0_30px_70px_-15px_rgba(99,102,241,0.5)] tracking-tight"
-                      >
-                        {currentIndex === questions.length - 1 ? 'CONSOLIDATE PERFORMANCE DATA' : 'INITIATE NEXT MODULE'}
-                        <ChevronRight className="w-7 h-7 ml-5 group-hover:translate-x-4 transition-transform" />
-                      </button>
-                   </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
 
       {/* Neural Status Bar (Cinematic) */}
       <footer className="flex flex-wrap gap-16 items-center justify-between py-12 border-t border-white/5 px-12">
@@ -617,20 +456,20 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
                transition={{ duration: 2, repeat: Infinity }}
                className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]"
              />
-            <span className="text-[10px] font-black uppercase tracking-[0.6em] group-hover:text-emerald-400 transition-colors">Neural Core: Optimized</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.6em] group-hover:text-emerald-400 transition-colors font-heading">Neural Core: Optimized</span>
           </div>
           <div className="flex items-center gap-5 text-white/10 group cursor-default">
             <span className="material-symbols-outlined text-violet-400/50 text-2xl group-hover:scale-125 transition-transform duration-500">model_training</span>
-            <span className="text-[10px] font-black uppercase tracking-[0.6em] group-hover:text-white transition-colors">
+            <span className="text-[10px] font-black uppercase tracking-[0.6em] group-hover:text-white transition-colors font-heading">
               Model: {process.env.NEXT_PUBLIC_AI_MODEL || 'Gemini 1.5 Flash'}
             </span>
           </div>
         </div>
         
         <div className="flex items-center gap-10">
-          <span className="text-[10px] font-black text-white/5 uppercase tracking-[0.5em]">Real-time Calibrations:</span>
+          <span className="text-[10px] font-black text-white/5 uppercase tracking-[0.5em] font-heading">Real-time Calibrations:</span>
           {['Semantics', 'Sentiment', 'Fluency'].map((area) => (
-            <span key={area} className="bg-white/[0.03] text-white/20 px-10 py-4 rounded-2xl text-[9px] font-black border border-white/5 uppercase tracking-[0.4em] hover:text-white hover:border-violet-500/30 transition-all cursor-default">
+            <span key={area} className="bg-white/[0.03] text-white/20 px-10 py-4 rounded-2xl text-[9px] font-black border border-white/5 uppercase tracking-[0.4em] hover:text-white hover:border-violet-500/30 transition-all cursor-default font-heading">
               {area}
             </span>
           ))}

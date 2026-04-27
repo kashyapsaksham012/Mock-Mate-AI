@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, integer, uuid, jsonb, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, uuid, jsonb, index, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Users table
@@ -103,6 +103,12 @@ export const interviewSessions = pgTable('interview_sessions', {
   difficulty: text('difficulty').notNull(),
   questions: jsonb('questions').notNull(), // Array of {id, question, type, hint}
   status: text('status').notNull().default('active'), // active, completed
+  overallScore: integer('overall_score'),
+  overallFeedback: text('overall_feedback'),
+  improvementTips: text('improvement_tips'),
+  precisionLevel: integer('precision_level'),
+  nodesAnalyzed: integer('nodes_analyzed'),
+  growthPotential: text('growth_potential'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => {
   return {
@@ -123,6 +129,7 @@ export const interviewAnswers = pgTable('interview_answers', {
 }, (table) => {
   return {
     sessionIdx: index('idx_interview_answers_session_id').on(table.sessionId),
+    sessionQuestionUnique: unique('uq_session_question').on(table.sessionId, table.questionId),
   };
 });
 

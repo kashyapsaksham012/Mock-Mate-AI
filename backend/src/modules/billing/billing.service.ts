@@ -23,6 +23,19 @@ export class BillingService {
 
   static async createSubscriptionSession(userId: string, planName: string, successUrl: string, cancelUrl: string) {
     try {
+      const normalizedPlanName = String(planName || '').trim().toLowerCase();
+      if (!normalizedPlanName) {
+        throw new AppError('Invalid plan name', 400);
+      }
+
+      const selectedPlan = await db.query.plans.findFirst({
+        where: eq(plans.name, normalizedPlanName),
+      });
+
+      if (!selectedPlan) {
+        throw new AppError(`Unknown plan: ${planName}`, 400);
+      }
+
       let user = await db.query.users.findFirst({
         where: eq(users.id, userId),
       });
@@ -37,24 +50,16 @@ export class BillingService {
         throw new AppError('User not found after sync', 404);
       }
 
-      const productId = planName === 'yearly' ? env.STRIPE_YEARLY_PRODUCT_ID : env.STRIPE_MONTHLY_PRODUCT_ID;
-      
-      let product;
+      const stripePriceId = selectedPlan.stripePriceId;
       try {
-        product = await stripe.products.retrieve(productId);
+        await stripe.prices.retrieve(stripePriceId);
       } catch (e: any) {
-        console.error(`[StripeError] Failed to retrieve product ${productId}:`, e.message);
-        throw new AppError(`Subscription plan configuration error: Product ${planName} not found in Stripe.`, 502);
+        console.error(`[StripeError] Failed to retrieve price ${stripePriceId}:`, e.message);
+        throw new AppError(
+          `Subscription plan configuration error: price id for plan '${selectedPlan.name}' is invalid in Stripe.`,
+          502,
+        );
       }
-
-      if (!product.default_price) {
-        throw new AppError(`Product ${planName} is missing a default price in Stripe dashboard`, 400);
-      }
-
-      const stripePriceId = product.default_price as string;
-      
-      // Update our local DB with the latest price ID from Stripe
-      await db.update(plans).set({ stripePriceId }).where(eq(plans.name, planName));
 
       let stripeCustomerId = user.stripeCustomerId;
       if (!stripeCustomerId) {
@@ -66,6 +71,21 @@ export class BillingService {
 
         stripeCustomerId = customer.id;
         await db.update(users).set({ stripeCustomerId }).where(eq(users.id, userId));
+      } else {
+        try {
+          const customer = await stripe.customers.retrieve(stripeCustomerId);
+          if ((customer as any)?.deleted) {
+            throw new Error('Stripe customer was deleted');
+          }
+        } catch {
+          const customer = await stripe.customers.create({
+            email: user.email,
+            name: user.fullName || undefined,
+            metadata: { userId: user.id },
+          });
+          stripeCustomerId = customer.id;
+          await db.update(users).set({ stripeCustomerId }).where(eq(users.id, userId));
+        }
       }
 
       const session = await stripe.checkout.sessions.create({
@@ -77,7 +97,7 @@ export class BillingService {
         cancel_url: cancelUrl,
         client_reference_id: userId,
         subscription_data: {
-          metadata: { userId, planName },
+          metadata: { userId, planName: selectedPlan.name },
         },
       });
 

@@ -30,6 +30,7 @@
     --margin-header: 4rem;
     --navbar-height: 80px;
     --navbar-height-scrolled: 70px;
+    --after-nav-space: 120px;
 
     /* Typography */
     --font-size-h1: clamp(2.5rem, 6vw, 4.5rem);
@@ -99,8 +100,11 @@
     width: 100%;
 }
 
+.pt-after-nav {
+    padding-top: var(--after-nav-space) !important;
+}
+
 .section-hero {
-    padding-top: 160px; /* Fully clear the navbar and its top offset */
     margin-bottom: 48px;
 }
 
@@ -117,6 +121,7 @@
     transform: translateY(-4px);
     border-color: rgba(99, 102, 241, 0.4);
 }
+/* (rest of the code omitted for brevity in this thought, I will provide the full replacement) */
 
 .footer-divider {
     width: 100%;
@@ -432,10 +437,9 @@ button {
 
 /* Navbar - $100B SaaS Premium Design */
 .navbar {
-    position: fixed;
+    position: sticky;
     top: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
+    margin: 1.5rem auto 0;
     width: calc(100% - 2rem);
     max-width: var(--container-max);
     height: var(--navbar-height);
@@ -554,7 +558,7 @@ button {
 
 /* Hero Section */
 .hero {
-    padding-top: 180px;
+    padding-top: var(--after-nav-space);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -1170,7 +1174,7 @@ button {
 /* Pricing */
 .pricing-section {
     text-align: center;
-    padding-top: calc(var(--navbar-height) + var(--padding-section));
+    padding-top: var(--after-nav-space);
 }
 
 .toggle-container {

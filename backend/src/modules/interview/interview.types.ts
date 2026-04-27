@@ -48,9 +48,29 @@ export const interviewAnswerRequestSchema = z.object({
 export type InterviewAnswerRequest = z.infer<typeof interviewAnswerRequestSchema>;
 
 export const interviewAnswerResponseSchema = z.object({
-  score: z.number().min(0).max(100),
-  aiFeedback: z.string(),
-  aiTip: z.string(),
+  success: z.boolean(),
 });
 
 export type InterviewAnswerResponse = z.infer<typeof interviewAnswerResponseSchema>;
+
+export const interviewEvaluateRequestSchema = z.object({
+  sessionId: z.string().uuid(),
+});
+
+export type InterviewEvaluateRequest = z.infer<typeof interviewEvaluateRequestSchema>;
+
+export const interviewEvaluateResponseSchema = z.object({
+  overallScore: z.number().min(0).max(10),
+  overallFeedback: z.string(),
+  improvementTips: z.string(),
+  precisionLevel: z.number().min(0).max(100),
+  nodesAnalyzed: z.number(),
+  growthPotential: z.string(),
+  questionBreakdown: z.array(z.object({
+    questionId: z.number(),
+    score: z.number().min(0).max(100),
+    feedback: z.string(),
+  })),
+});
+
+export type InterviewEvaluateResponse = z.infer<typeof interviewEvaluateResponseSchema>;

@@ -26,3 +26,19 @@ export type InterviewGenerateResponse = {
   sessionId?: string;
   duration?: string;
 };
+
+export type InterviewEvaluateBreakdown = {
+  questionId: number;
+  score: number;
+  feedback: string;
+};
+
+export type InterviewEvaluateResponse = {
+  overallScore: number;
+  overallFeedback: string;
+  improvementTips: string;
+  precisionLevel: number;
+  nodesAnalyzed: number;
+  growthPotential: string;
+  questionBreakdown: InterviewEvaluateBreakdown[];
+};
