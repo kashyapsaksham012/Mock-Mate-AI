@@ -4,6 +4,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import "./landing.css";
+import ChatWidget from "@/components/chat/ChatWidget";
 
 export const metadata: Metadata = {
   title: "MockMate AI | Ace Every Interview",
@@ -38,6 +39,7 @@ export default function RootLayout({
             toastClassName="!bg-[#0D121F] !border !border-white/10 !rounded-2xl !backdrop-blur-xl !shadow-2xl"
             progressClassName="!bg-gradient-to-r !from-violet-500 !to-fuchsia-500"
           />
+          <ChatWidget />
         </body>
       </html>
     </ClerkProvider>

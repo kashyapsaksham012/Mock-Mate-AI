@@ -357,7 +357,7 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
                     {/* Integrated Voice Architecture */}
                     <div className="flex items-center gap-8 relative z-10">
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-4">Neural Voice Architecture</span>
+                        <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-4 ml-[10px]">Neural Voice Architecture</span>
                         <div className="flex items-center gap-6">
                           <button 
                             onClick={toggleRecording}
@@ -419,24 +419,30 @@ export function InterviewSession({ questions, sessionId, duration }: InterviewSe
                       <button 
                         onClick={handleSubmit}
                         disabled={!response.trim() || isSubmitting || isRecording}
-                        className="group relative flex items-center justify-between w-[280px] px-8 py-5 rounded-[24px] bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-700 hover:from-indigo-500 hover:via-violet-500 hover:to-fuchsia-600 disabled:opacity-20 disabled:grayscale transition-all duration-700 shadow-[0_30px_100px_-20px_rgba(99,102,241,0.6)] border-t border-white/30 overflow-hidden active:scale-95 text-left font-heading"
+                        className="group relative flex items-center justify-center w-[300px] px-8 py-5 rounded-[24px] bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-700 hover:from-indigo-500 hover:via-violet-500 hover:to-fuchsia-600 disabled:opacity-20 disabled:grayscale transition-all duration-700 shadow-[0_30px_100px_-20px_rgba(99,102,241,0.6)] border-t border-white/30 overflow-hidden active:scale-95 text-center font-heading"
                       >
-                        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        {/* Enhanced Hover Overlay */}
+                        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 backdrop-blur-sm" />
                         
-                        <div className="flex flex-col items-start justify-center relative">
-                          <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.3em] mb-1 group-hover:text-white/60 transition-colors">Neural Sync</span>
-                          <span className="text-xs font-black text-white uppercase tracking-[0.4em] drop-shadow-2xl">
+                        <div className="flex flex-col items-center justify-center relative z-10">
+                          <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.25em] mb-1 group-hover:text-white/80 transition-colors whitespace-nowrap">Neural Sync</span>
+                          <span className="text-xs font-black text-white uppercase tracking-[0.3em] drop-shadow-2xl whitespace-nowrap">
                             {isSubmitting ? 'ANALYZING...' : 'COMMIT RESPONSE'}
                           </span>
                         </div>
                         
-                        {isSubmitting ? (
-                          <div className="w-5 h-5 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
-                        ) : (
-                          <div className="relative w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors duration-700 border border-white/10">
-                            <Send className="w-4 h-4 text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-700 ease-out" />
-                          </div>
-                        )}
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 z-20">
+                          {isSubmitting ? (
+                            <div className="w-5 h-5 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors duration-700 border border-white/10">
+                              <Send className="w-4 h-4 text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-700 ease-out" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Subtle scanner effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
                       </button>
                     </div>
                   </div>

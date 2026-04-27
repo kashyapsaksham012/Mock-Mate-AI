@@ -8,6 +8,7 @@ import { webhookRoutes } from './modules/webhook/webhook.routes';
 import { clerkWebhookRoutes } from './modules/webhook/clerk-webhook.routes';
 import { resumeRoutes } from './modules/resume/resume.routes';
 import { interviewRoutes } from './modules/interview/interview.routes';
+import { chatRoutes } from './modules/chat/chat.routes';
 import { subscriptionGuard } from './middleware/subscriptionGuard';
 import { requireAuth } from './middleware/auth';
 import { AppError } from './utils/errors';
@@ -37,6 +38,7 @@ app.use(express.json());
 // Main App Routes
 app.use('/api/billing', billingRoutes);
 app.use('/api/interview', interviewRoutes);
+app.use('/api/chat', chatRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

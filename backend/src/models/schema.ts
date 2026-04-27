@@ -133,6 +133,31 @@ export const interviewAnswers = pgTable('interview_answers', {
   };
 });
 
+// Chat Sessions table
+export const chatSessions = pgTable('chat_sessions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => {
+  return {
+    userIdx: index('idx_chat_sessions_user_id').on(table.userId),
+  };
+});
+
+// Chat Messages table
+export const chatMessages = pgTable('chat_messages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sessionId: uuid('session_id').notNull().references(() => chatSessions.id, { onDelete: 'cascade' }),
+  role: text('role').notNull(), // 'user' | 'model'
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => {
+  return {
+    sessionIdx: index('idx_chat_messages_session_id').on(table.sessionId),
+  };
+});
+
 // Relations definitions
 export const usersRelations = relations(users, ({ many }) => ({
   subscriptions: many(subscriptions),
@@ -140,6 +165,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   auditLogs: many(auditLogs),
   resumeProfiles: many(resumeProfiles),
   interviewSessions: many(interviewSessions),
+  chatSessions: many(chatSessions),
 }));
 
 export const interviewSessionsRelations = relations(interviewSessions, ({ one, many }) => ({
@@ -154,6 +180,21 @@ export const interviewAnswersRelations = relations(interviewAnswers, ({ one }) =
   session: one(interviewSessions, {
     fields: [interviewAnswers.sessionId],
     references: [interviewSessions.id],
+  }),
+}));
+
+export const chatSessionsRelations = relations(chatSessions, ({ one, many }) => ({
+  user: one(users, {
+    fields: [chatSessions.userId],
+    references: [users.id],
+  }),
+  messages: many(chatMessages),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  session: one(chatSessions, {
+    fields: [chatMessages.sessionId],
+    references: [chatSessions.id],
   }),
 }));
 
