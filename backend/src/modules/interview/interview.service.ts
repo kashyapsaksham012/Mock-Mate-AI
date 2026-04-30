@@ -129,6 +129,11 @@ export class InterviewService {
       throw new AppError('Interview session not found or unauthorized', 404);
     }
 
+    // Fetch user profile for context
+    const profile = await db.query.resumeProfiles.findFirst({
+      where: eq(resumeProfiles.userId, session.userId),
+    });
+
     const questions = (session.questions as any[]) ?? [];
     const expectedQuestionIds = questions
       .map((q) => Number(q?.id))
@@ -181,9 +186,12 @@ export class InterviewService {
 
     // SCORING WITH GEMINI
     const prompt = [
-      'You are an expert technical interviewer. Evaluate this entire interview session.',
+      'You are a high-level executive interviewer. Evaluate this entire session strictly.',
       `- Role: ${session.targetRole}`,
-      `- Difficulty: ${session.difficulty}`,
+      `- Experience Level: ${profile?.experience || session.difficulty}`,
+      `- Core Skills: ${profile?.skills?.join(', ') || 'N/A'}`,
+      `- Focus Areas: ${profile?.primaryDomain || 'N/A'}`,
+      `- Experience Context: ${orderedAnswers[0]?.answerText.substring(0, 150)}...`,
       '',
       'Questions and User Answers:',
       ...orderedAnswers.map((ans: any) => {
@@ -191,14 +199,17 @@ export class InterviewService {
         return `Q: ${q?.question}\nA: ${ans.answerText}\n---`;
       }),
       '',
-      'Return ONLY a valid JSON object. Do not include markdown formatting like ```json.',
-      'The overallScore must be an integer between 0 and 10.',
-      'The precisionLevel must be a percentage (0-100).',
-      'The nodesAnalyzed should be the number of key technical concepts identified in the answers.',
-      'The growthPotential should be a short descriptive string (e.g., "Elite", "High", "Consistent").',
-      'The questionBreakdown must include a score (0-100) and feedback for each question provided.',
+      'Scoring Requirements:',
+      '1. overallScore: 0-10 integer.',
+      '2. precisionLevel: 0-100 percentage.',
+      '3. nodesAnalyzed: count of technical concepts/keywords used in answers.',
+      '4. growthPotential: "Elite", "High", or "Consistent" based on depth.',
       '',
-      'JSON Structure:',
+      'Content Requirements (IMPORTANT):',
+      `- overallFeedback MUST follow this EXACT pattern: "You completed all ${orderedAnswers.length} questions for the ${session.targetRole} role. The scoring reflects depth, clarity, and technical coverage across your full interview." (Inject the role name naturally).`,
+      '- improvementTips: Provide a concise "AI Performance Roadmap" with 2-3 specific implementation-focused tips.',
+      '',
+      'Return ONLY a valid JSON object:',
       '{',
       '  "overallScore": number,',
       '  "overallFeedback": "string",',
@@ -337,7 +348,7 @@ export class InterviewService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
+          generationConfig: { temperature: 0.8, responseMimeType: 'application/json' },
         }),
       }
     );
@@ -365,10 +376,13 @@ export class InterviewService {
       `- Company type: ${input.companyType}`,
       `- Focus areas: ${input.focusAreas.join(', ') || 'N/A'}`,
       `- Difficulty: ${input.difficulty}`,
+      `- Session Seed: ${Math.random().toString(36).substring(7)}-${Date.now()}`,
       '',
       isBehavioral 
         ? 'Focus on situational, behavioral, and cultural fit questions (e.g., STAR method) relevant to this role and industry. Ensure questions help evaluate soft skills, leadership, and conflict resolution.'
         : 'Focus on core technical concepts, problem-solving, and architecture relevant to the listed skills and role.',
+      '',
+      'Ensure each generation produces unique and varied questions. Avoid repeating common patterns.',
       '',
       'Return ONLY JSON: { "questions": [{ "id": 1, "question": "...", "type": "technical|behavioral", "hint": "..." }] }',
     ].join('\n');
@@ -387,20 +401,37 @@ export class InterviewService {
       ...input.skills,
       ...input.focusAreas,
       input.targetRole,
-    ]).slice(0, 8);
+    ]).sort(() => Math.random() - 0.5).slice(0, 8);
 
     const questions = Array.from({ length: 8 }).map((_, index) => {
       const topic = baseTopics[index] || 'professional growth';
       
-      // If behavioral, all questions are behavioral. If technical, most are technical.
       const type = isBehavioral ? 'behavioral' : (index < 6 ? 'technical' : 'behavioral');
       const isTechnical = type === 'technical';
 
+      const variations = [
+        `Explain how you would approach ${topic} for a ${input.targetRole} role.`,
+        `What are the most common challenges you face when working with ${topic}?`,
+        `How do you stay updated with the latest developments in ${topic}?`,
+        `Describe a complex project where you utilized ${topic} extensively.`,
+        `In your opinion, what is the most important aspect of ${topic} for a ${input.targetRole}?`,
+      ];
+
+      const behavioralVariations = [
+        `Describe a time you handled a difficult situation related to ${topic}.`,
+        `Tell me about a situation where you had to make a quick decision about ${topic}.`,
+        `Give an example of a time you successfully explained a complex ${topic} concept to a non-technical stakeholder.`,
+        `Describe a time you failed while working on ${topic} and what you learned.`,
+        `How do you handle disagreements with teammates regarding ${topic}?`,
+      ];
+
+      const questionText = isTechnical
+        ? variations[Math.floor(Math.random() * variations.length)]
+        : behavioralVariations[Math.floor(Math.random() * behavioralVariations.length)];
+
       return {
         id: index + 1,
-        question: isTechnical
-          ? `Explain how you would approach ${topic} for a ${input.targetRole} role.`
-          : `Describe a time you handled a difficult situation related to ${topic}.`,
+        question: questionText,
         type: type as 'technical' | 'behavioral',
         hint: isTechnical
           ? `Discuss trade-offs, constraints, and testing depth at ${input.difficulty} difficulty.`

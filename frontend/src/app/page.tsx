@@ -39,6 +39,53 @@ export default function LandingPage() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const mockupSidebarRef = useRef<HTMLDivElement>(null);
 
+  const mockupPool = [
+    {
+      label: "Technical Interview",
+      question: "Walk us through a high-probability setup where you leveraged SMC and ICT methodologies—specifically liquidity grabs and FVGs—to confirm directional bias and secure an OTE.",
+      feedback: {
+        score: "8.5/10",
+        items: [
+          { type: "positive", text: "Excellent depth on liquidity sweep identification and multi-timeframe alignment." },
+          { type: "negative", text: "Consider mentioning risk-to-reward parameters for a more complete answer." },
+        ]
+      },
+      answer: "I establish a draw on liquidity using H4/D1 timeframes. Following a liquidity sweep, I look for a Market Structure Shift (MSS) with displacement on the M15. The entry is then optimized within the 62%-79% retracement leg, targeting the next logical liquidity pool."
+    },
+    {
+      label: "System Design",
+      question: "How would you design a real-time analytics system that handles 100k events per second with sub-second latency?",
+      feedback: {
+        score: "9.1/10",
+        items: [
+          { type: "positive", text: "Strong understanding of stream processing and partitioning strategies." },
+          { type: "negative", text: "Could expand more on data retention and archival policies." },
+        ]
+      },
+      answer: "I would use a distributed message queue like Kafka for ingestion, followed by a stream processing engine like Flink for real-time aggregation. For storage, a Time-Series Database like ClickHouse or Druid would handle the high-write volume and provide fast OLAP queries."
+    },
+    {
+      label: "Behavioral",
+      question: "Tell me about a time you had to deliver a critical project under an extremely tight deadline with limited resources.",
+      feedback: {
+        score: "8.9/10",
+        items: [
+          { type: "positive", text: "Great use of the STAR method and focus on prioritization." },
+          { type: "negative", text: "Try to quantify the impact of the final delivery more clearly." },
+        ]
+      },
+      answer: "During a major product launch, our lead backend dev fell ill. I stepped in to bridge the gap, identified the 'must-have' features, and implemented a phased rollout strategy. We met the deadline by focusing on core functionality and deferring non-critical UI polish."
+    }
+  ];
+
+  const [mockupIndex, setMockupIndex] = useState(0);
+
+  useEffect(() => {
+    setMockupIndex(Math.floor(Math.random() * mockupPool.length));
+  }, []);
+
+  const activeMockup = mockupPool[mockupIndex];
+
   const landingData = {
     brand: {
       name: "MockMate",
@@ -72,14 +119,11 @@ export default function LandingPage() {
     },
     mockup: {
       label: "Ongoing Interview",
-      question: "Walk us through a high-probability setup where you leveraged SMC and ICT methodologies—specifically liquidity grabs and FVGs—to confirm directional bias and secure an OTE.",
+      question: activeMockup.question,
       feedback: {
         label: "AI Feedback",
-        score: "8.5/10",
-        items: [
-          { type: "positive", text: "Excellent depth on liquidity sweep identification and multi-timeframe alignment." },
-          { type: "negative", text: "Consider mentioning risk-to-reward parameters for a more complete answer." },
-        ]
+        score: activeMockup.feedback.score,
+        items: activeMockup.feedback.items
       },
       demos: {
         technical: {
@@ -259,7 +303,7 @@ export default function LandingPage() {
   const demoTabs: Array<keyof typeof landingData.mockup.demos> = ["technical", "behavioral", "hr"];
 
   function startHeroTyping() {
-    const text = "To architect a scalable microservices system, I would first focus on decoupling services using an event-driven architecture with a message broker like Kafka. I'd then implement a service mesh for secure inter-service communication...";
+    const text = activeMockup.answer;
     let i = 0;
     if (typingAnswerRef.current && typingAnswerRef.current.innerHTML === "") {
       const type = () => {
