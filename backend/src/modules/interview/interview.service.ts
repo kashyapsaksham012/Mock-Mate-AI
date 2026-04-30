@@ -39,8 +39,10 @@ export class InterviewService {
       jobLevel: payload.jobLevel || payload.experience || profile?.experience || 'Mid',
       skills: this.uniqueStrings(payload.skills?.length ? payload.skills : profile?.skills ?? []),
       primaryDomain: payload.primaryDomain || profile?.primaryDomain || 'General Software Development',
-      companyType: payload.companyType || 'Product Company',
-      focusAreas: this.uniqueStrings(payload.focusAreas ?? []),
+      companyType: payload.companyType || profile?.companyType || 'Product Company',
+      focusAreas: this.uniqueStrings(payload.focusAreas?.length ? payload.focusAreas : profile?.focusAreas ?? []),
+      deepDiveTopics: this.uniqueStrings(payload.deepDiveTopics?.length ? payload.deepDiveTopics : profile?.deepDiveTopics ?? []),
+      notes: payload.notes || profile?.notes || '',
       difficulty: payload.difficulty || 'Medium',
       interviewType: payload.interviewType || 'Technical',
       fullName: payload.fullName || profile?.fullName || '',
@@ -62,6 +64,10 @@ export class InterviewService {
       userId,
       targetRole: merged.targetRole,
       difficulty: merged.difficulty,
+      companyType: merged.companyType,
+      focusAreas: merged.focusAreas,
+      deepDiveTopics: merged.deepDiveTopics,
+      notes: merged.notes,
       questions,
       status: 'active',
     }).returning();
@@ -69,7 +75,15 @@ export class InterviewService {
     // UPDATE USER PREFERENCE (if profile exists)
     if (profile) {
       await db.update(resumeProfiles)
-        .set({ lastDifficulty: merged.difficulty })
+        .set({ 
+          lastDifficulty: merged.difficulty,
+          targetRole: merged.targetRole,
+          companyType: merged.companyType,
+          focusAreas: merged.focusAreas,
+          deepDiveTopics: merged.deepDiveTopics,
+          notes: merged.notes,
+          updatedAt: new Date(),
+        })
         .where(eq(resumeProfiles.userId, userId));
     }
 
@@ -375,12 +389,16 @@ export class InterviewService {
       `- Domain: ${input.primaryDomain}`,
       `- Company type: ${input.companyType}`,
       `- Focus areas: ${input.focusAreas.join(', ') || 'N/A'}`,
+      `- Deep dive topics: ${input.deepDiveTopics.join(', ') || 'N/A'}`,
+      `- Additional Instructions/Notes: ${input.notes || 'N/A'}`,
       `- Difficulty: ${input.difficulty}`,
       `- Session Seed: ${Math.random().toString(36).substring(7)}-${Date.now()}`,
       '',
+      input.notes ? `CRITICAL: Adhere to these specific candidate requests: ${input.notes}` : '',
+      '',
       isBehavioral 
         ? 'Focus on situational, behavioral, and cultural fit questions (e.g., STAR method) relevant to this role and industry. Ensure questions help evaluate soft skills, leadership, and conflict resolution.'
-        : 'Focus on core technical concepts, problem-solving, and architecture relevant to the listed skills and role.',
+        : `Focus on technical concepts, problem-solving, and architecture. Prioritize the provided "Deep Dive Topics" and "Focus Areas".`,
       '',
       'Ensure each generation produces unique and varied questions. Avoid repeating common patterns.',
       '',

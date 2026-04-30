@@ -85,6 +85,10 @@ export const resumeProfiles = pgTable('resume_profiles', {
   skills: text('skills').array(),
   primaryDomain: text('primary_domain'),
   targetRole: text('target_role'),
+  companyType: text('company_type'),
+  focusAreas: text('focus_areas').array(),
+  deepDiveTopics: text('deep_dive_topics').array(),
+  notes: text('notes'),
   fileUrl: text('file_url'),
   parserSource: text('parser_source'),
   lastDifficulty: text('last_difficulty').default('Medium'),
@@ -101,6 +105,10 @@ export const interviewSessions = pgTable('interview_sessions', {
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   targetRole: text('target_role').notNull(),
   difficulty: text('difficulty').notNull(),
+  companyType: text('company_type'),
+  focusAreas: text('focus_areas').array(),
+  deepDiveTopics: text('deep_dive_topics').array(),
+  notes: text('notes'),
   questions: jsonb('questions').notNull(), // Array of {id, question, type, hint}
   status: text('status').notNull().default('active'), // active, completed
   overallScore: integer('overall_score'),

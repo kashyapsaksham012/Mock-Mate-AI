@@ -16,6 +16,8 @@ export type InterviewGenerateRequest = {
   jobLevel?: string;
   companyType?: string;
   focusAreas?: string[];
+  deepDiveTopics?: string[];
+  notes?: string;
   difficulty?: string;
   interviewType?: string;
   duration?: string;

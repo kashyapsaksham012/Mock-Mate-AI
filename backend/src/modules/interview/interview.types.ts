@@ -11,6 +11,8 @@ export const interviewGenerateRequestSchema = z.object({
   jobLevel: z.string().optional(),
   companyType: z.string().optional(),
   focusAreas: z.array(z.string()).optional(),
+  deepDiveTopics: z.array(z.string()).optional(),
+  notes: z.string().optional(),
   difficulty: z.string().optional(),
   interviewType: z.string().optional(),
 });

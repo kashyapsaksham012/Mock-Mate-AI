@@ -6,6 +6,10 @@ export type ResumeAutofillData = {
   skills: string[];
   primaryDomain: string;
   targetRole: string;
+  companyType?: string;
+  focusAreas?: string[];
+  deepDiveTopics?: string[];
+  notes?: string;
   lastDifficulty?: string;
 };
 
@@ -17,6 +21,10 @@ export const emptyResumeAutofillData: ResumeAutofillData = {
   skills: [],
   primaryDomain: '',
   targetRole: '',
+  companyType: '',
+  focusAreas: [],
+  deepDiveTopics: [],
+  notes: '',
   lastDifficulty: 'Medium',
 };
 

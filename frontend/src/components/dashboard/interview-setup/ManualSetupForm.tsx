@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { User, Target, Brain, Settings, PenTool, Rocket, Save, Plus, X, ChevronRight } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 import { type ResumeAutofillData } from "@/types/resume";
 import { type InterviewGenerateRequest } from "@/types/interview";
 
@@ -33,7 +34,7 @@ export function ManualSetupForm({
   const [currentRole, setCurrentRole] = useState(() => resumeData.currentRole || "");
   const [experience, setExperience] = useState(() => resumeData.experience || "");
   const [desiredRole, setDesiredRole] = useState(() => resumeData.targetRole || "");
-  const [targetCompanyType, setTargetCompanyType] = useState("");
+  const [targetCompanyType, setTargetCompanyType] = useState(() => resumeData.companyType || "");
   const [primaryDomain, setPrimaryDomain] = useState(() => resumeData.primaryDomain || "");
   const [techStack, setTechStack] = useState<string[]>(() => resumeData.skills || []);
   const [newSkill, setNewSkill] = useState("");
@@ -41,10 +42,10 @@ export function ManualSetupForm({
   const [difficulty, setDifficulty] = useState(() => resumeData.lastDifficulty || "Medium");
   const [interviewType, setInterviewType] = useState("Technical");
   const [duration, setDuration] = useState("");
-  const [focusAreas, setFocusAreas] = useState<string[]>([]);
+  const [focusAreas, setFocusAreas] = useState<string[]>(() => resumeData.focusAreas || []);
   const [newFocusArea, setNewFocusArea] = useState("");
-  const [activeFocus, setActiveFocus] = useState<string[]>([]);
-  const [additionalInstructions, setAdditionalInstructions] = useState("");
+  const [activeFocus, setActiveFocus] = useState<string[]>(() => resumeData.deepDiveTopics || []);
+  const [additionalInstructions, setAdditionalInstructions] = useState(() => resumeData.notes || "");
 
   const toggleFocus = (area: string) => {
     setActiveFocus((prev) =>
@@ -77,6 +78,38 @@ export function ManualSetupForm({
   };
 
   const handleStartInterview = async () => {
+    // Dynamic Validation Check
+    const requiredFields = {
+      "Full Name": fullName,
+      "Email": email,
+      "Experience": experience,
+      "Desired Role": desiredRole,
+      "Job Level": selectedLevel,
+      "Target Company Type": targetCompanyType,
+      "Primary Domain": primaryDomain,
+      "Difficulty": difficulty,
+      "Interview Type": interviewType,
+      "Duration": duration,
+    };
+
+    const missingFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value || (Array.isArray(value) && value.length === 0))
+      .map(([name]) => name);
+
+    if (missingFields.length > 0) {
+      toast.error(`Please complete all fields: ${missingFields.join(", ")}`, {
+        style: { borderRadius: '16px', background: '#1a1a1a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }
+      });
+      return;
+    }
+
+    if (techStack.length === 0) {
+      toast.error("Please add at least one skill to your Tech Stack.", {
+        style: { borderRadius: '16px', background: '#1a1a1a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }
+      });
+      return;
+    }
+
     try {
       const response = await onStartInterview({
         fullName,
@@ -88,7 +121,9 @@ export function ManualSetupForm({
         targetRole: desiredRole,
         jobLevel: selectedLevel,
         companyType: targetCompanyType,
-        focusAreas: activeFocus,
+        focusAreas: focusAreas,
+        deepDiveTopics: activeFocus,
+        notes: additionalInstructions,
         difficulty,
         interviewType,
         duration,

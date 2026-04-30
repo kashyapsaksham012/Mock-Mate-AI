@@ -11,6 +11,10 @@ export const resumeAutofillSchema = z.object({
   skills: z.array(z.string()).default([]),
   primaryDomain: z.string().default(''),
   targetRole: z.string().default(''),
+  companyType: z.string().optional(),
+  focusAreas: z.array(z.string()).optional(),
+  deepDiveTopics: z.array(z.string()).optional(),
+  notes: z.string().optional(),
 });
 
 export type ResumeAutofillData = z.infer<typeof resumeAutofillSchema>;
@@ -39,6 +43,10 @@ export type ResumeProfileRecord = {
   skills: string[] | null;
   primaryDomain: string | null;
   targetRole: string | null;
+  companyType: string | null;
+  focusAreas: string[] | null;
+  deepDiveTopics: string[] | null;
+  notes: string | null;
   fileUrl: string | null;
   parserSource: string | null;
   updatedAt: Date | null;
