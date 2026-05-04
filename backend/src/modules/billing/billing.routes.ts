@@ -4,6 +4,7 @@ import { requireAuth, ClerkAuthRequest } from '../../middleware/auth';
 import { db } from '../../config/db';
 import { subscriptions } from '../../models/schema';
 import { and, eq, gt, desc } from 'drizzle-orm';
+import { env } from '../../config/env';
 
 const router = Router();
 
@@ -62,13 +63,21 @@ router.get('/subscription-status', async (req: Request, res: Response, next: Nex
         sub = syncedSub;
       }
     }
+    const trialUsage = await BillingService.getTrialUsage(userId);
+    const trialLimit = env.FREE_TRIAL_LIMIT;
 
-    if (!sub || sub.status === 'expired') {
-      return res.json({ status: 'inactive' });
+    if (!sub || sub.status === 'expired' || sub.status === 'inactive') {
+      return res.json({ 
+        status: 'inactive',
+        trialUsage,
+        trialLimit
+      });
     }
 
     return res.json({
       status: sub.status,
+      trialUsage,
+      trialLimit,
       subscription: {
         planName: sub.plan?.name ?? null,
         periodEnd: sub.currentPeriodEnd,

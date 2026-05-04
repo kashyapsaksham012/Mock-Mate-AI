@@ -1,7 +1,7 @@
 import { stripe } from '../../config/stripe';
 import { db } from '../../config/db';
 import { env } from '../../config/env';
-import { users, plans, subscriptions } from '../../models/schema';
+import { users, plans, subscriptions, interviewSessions } from '../../models/schema';
 import { eq } from 'drizzle-orm';
 import { AppError, NotFoundError } from '../../utils/errors';
 
@@ -291,6 +291,13 @@ export class BillingService {
       where: eq(subscriptions.id, dbSub.id),
       with: { plan: true },
     });
+  }
+
+  static async getTrialUsage(userId: string) {
+    const sessions = await db.query.interviewSessions.findMany({
+      where: eq(interviewSessions.userId, userId),
+    });
+    return sessions.length;
   }
 }
 

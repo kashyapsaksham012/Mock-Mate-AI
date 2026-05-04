@@ -40,7 +40,7 @@ const itemVariants = {
 function DashboardContent() {
   const router = useRouter();
   const { getToken } = useAuth();
-  const { status, isLoading, error } = useSubscriptionStatus();
+  const { data: statusData, status, isLoading, error } = useSubscriptionStatus();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [resumeData, setResumeData] = useState<ResumeAutofillData>(emptyResumeAutofillData);
@@ -50,14 +50,28 @@ function DashboardContent() {
   const [interviewError, setInterviewError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
 
-  useEffect(() => {
-    if (!sessionId && !isLoading && !error && status !== "active") {
-      router.replace(appRoutes.pricing);
-    }
-  }, [error, isLoading, router, sessionId, status]);
+  // Calculate if the user has exhausted their trial
+  const trialUsage = statusData?.trialUsage ?? 0;
+  const trialLimit = statusData?.trialLimit ?? 3;
+  const isTrialExhausted = trialUsage >= trialLimit;
+  const isSubscriber = status === "active";
 
   useEffect(() => {
-    if (isLoading || status !== "active") {
+    if (isLoading || error) return;
+
+    // Allow if:
+    // 1. User has an active subscription
+    // 2. User is in trial and hasn't exhausted it
+    // 3. We are coming back from a successful Stripe checkout (sessionId present)
+    const canAccess = isSubscriber || (!isTrialExhausted) || !!sessionId;
+
+    if (!canAccess) {
+      router.replace(appRoutes.pricing);
+    }
+  }, [error, isLoading, router, sessionId, status, isSubscriber, isTrialExhausted]);
+
+  useEffect(() => {
+    if (isLoading || (!isSubscriber && isTrialExhausted)) {
       return;
     }
 
@@ -145,9 +159,18 @@ function DashboardContent() {
     >
       <motion.div 
         variants={itemVariants} 
-        className="section-hero w-full flex justify-center pt-after-nav"
+        className="section-hero w-full flex flex-col items-center pt-after-nav gap-6"
       >
         <InterviewSetupHeader />
+        
+        {!isSubscriber && (
+          <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/[0.05] border border-white/10 backdrop-blur-md">
+            <div className="w-2 h-2 rounded-full bg-accent-highlight animate-pulse" />
+            <span className="text-xs uppercase tracking-widest text-text-muted">
+              Trial Status: <span className="text-white font-bold">{trialLimit - trialUsage}</span> Interviews Left
+            </span>
+          </div>
+        )}
       </motion.div>
 
       <div className="space-y-[100px] w-full">

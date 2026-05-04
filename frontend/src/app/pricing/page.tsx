@@ -27,7 +27,10 @@ export default async function PricingPage() {
   
   let shouldRedirect = false;
 
-  // If logged in, check if already subscribed to redirect to dashboard
+  let isTrialExhausted = false;
+  let currentTrialUsage = 0;
+
+  // If logged in, check if already subscribed or trial exhausted
   if (userId) {
     try {
       const token = await getToken();
@@ -39,6 +42,11 @@ export default async function PricingPage() {
         const statusJson = await statusRes.json();
         if (statusJson.status === 'active') {
           shouldRedirect = true;
+        }
+        
+        currentTrialUsage = statusJson.trialUsage || 0;
+        if (statusJson.trialUsage >= (statusJson.trialLimit || 3)) {
+          isTrialExhausted = true;
         }
       }
     } catch (err) {
@@ -97,7 +105,11 @@ export default async function PricingPage() {
 
         <div className="pricing-grid">
           {dynamicPlans.map((plan) => (
-            <PricingCard key={plan.id} plan={plan} />
+            <PricingCard 
+              key={plan.id} 
+              plan={plan} 
+              isTrialExhausted={isTrialExhausted}
+            />
           ))}
         </div>
       </section>

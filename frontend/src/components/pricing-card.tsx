@@ -7,9 +7,10 @@ import { SubscriptionPlan } from "@/lib/subscription-plans";
 
 interface PricingCardProps {
   plan: SubscriptionPlan;
+  isTrialExhausted?: boolean;
 }
 
-export function PricingCard({ plan }: PricingCardProps) {
+export function PricingCard({ plan, isTrialExhausted }: PricingCardProps) {
   const { getToken } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -64,6 +65,11 @@ export function PricingCard({ plan }: PricingCardProps) {
       {plan.popular && <span className="popular-badge">MOST POPULAR</span>}
       <h3>{plan.name}</h3>
       <p className="text-muted">{plan.subtitle}</p>
+      {plan.id === "free-trial" && isTrialExhausted && (
+        <p className="text-rose-400 text-xs font-medium mt-1">
+          Trial ended. Upgrade to continue.
+        </p>
+      )}
       <div className="price">
         {plan.price}
         <span>{plan.cadence}</span>
@@ -78,11 +84,21 @@ export function PricingCard({ plan }: PricingCardProps) {
       </ul>
       <button
         onClick={handleSubscription}
-        disabled={isLoading}
+        disabled={isLoading || (plan.id === "free-trial" && isTrialExhausted)}
         className={`btn ${plan.popular ? "btn-primary" : "btn-secondary"}`}
-        style={{ width: "100%", justifyContent: "center", cursor: "pointer" }}
+        style={{ 
+          width: "100%", 
+          justifyContent: "center", 
+          cursor: (isLoading || (plan.id === "free-trial" && isTrialExhausted)) ? "not-allowed" : "pointer" 
+        }}
       >
-        {isLoading ? <Loader2 className="animate-spin" size={18} /> : plan.ctaLabel}
+        {isLoading ? (
+          <Loader2 className="animate-spin" size={18} />
+        ) : (plan.id === "free-trial" && isTrialExhausted) ? (
+          "Limit Reached"
+        ) : (
+          plan.ctaLabel
+        )}
       </button>
     </article>
   );

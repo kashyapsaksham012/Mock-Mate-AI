@@ -28,6 +28,7 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
   CLOUDINARY_UPLOAD_FOLDER: z.string().default('mockmate/resumes'),
+  FREE_TRIAL_LIMIT: z.string().default('3').transform((v) => parseInt(v, 10)),
 });
 
 const parseEnv = () => {

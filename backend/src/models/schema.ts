@@ -7,6 +7,9 @@ export const users = pgTable('users', {
   email: text('email').unique().notNull(),
   fullName: text('full_name'),
   stripeCustomerId: text('stripe_customer_id').unique(),
+  freeTrialCount: integer('free_trial_count').default(3),
+  hasSeenPricing: boolean('has_seen_pricing').default(false),
+  trialInterviewsUsed: integer('trial_interviews_used').default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });

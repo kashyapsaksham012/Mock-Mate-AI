@@ -4,6 +4,7 @@ import { db } from '../config/db';
 import { subscriptions, plans } from '../models/schema';
 import { eq, and, gt } from 'drizzle-orm';
 import { ForbiddenError } from '../utils/errors';
+import { env } from '../config/env';
 
 export const subscriptionGuard = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -50,9 +51,23 @@ export const subscriptionGuard = async (req: Request, res: Response, next: NextF
     }
 
     if (!activeSub) {
+      const { BillingService } = require('../modules/billing/billing.service');
+      const trialUsage = await BillingService.getTrialUsage(userId);
+      const trialLimit = env.FREE_TRIAL_LIMIT;
+
+      if (trialUsage < trialLimit) {
+        // Allow access as a trial user
+        (req as any).subscription = {
+          status: 'trial',
+          trialUsage,
+          trialLimit,
+        };
+        return next();
+      }
+
       return res.status(403).json({ 
-        error: 'SUBSCRIPTION_REQUIRED',
-        message: 'Active subscription needed to access this feature',
+        error: 'TRIAL_EXHAUSTED',
+        message: `You have reached the ${trialLimit}-interview limit. Please upgrade to a paid plan.`,
       });
     }
 
