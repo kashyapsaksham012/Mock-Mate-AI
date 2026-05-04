@@ -8,7 +8,10 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
+  const userAgent = req.headers.get("user-agent") || "";
+  const isVercelBot = userAgent.toLowerCase().includes("vercel-screenshot");
+
+  if (!isPublicRoute(req) && !isVercelBot) {
     await auth.protect();
   }
 });
