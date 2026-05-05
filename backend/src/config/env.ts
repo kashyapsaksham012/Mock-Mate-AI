@@ -22,7 +22,7 @@ const envSchema = z.object({
   
   FRONTEND_URL: z.string().default('http://localhost:3000'),
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default('gemini-1.5-pro'),
+  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
   RESUME_UPLOAD_DIR: z.string().default('uploads/resumes'),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
